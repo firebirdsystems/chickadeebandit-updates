@@ -1,0 +1,886 @@
+{
+  "scenarios": [
+    {
+      "name": "a child reads the page but is offered no way to post, edit, share or remove; an adult is offered each, and an update they post is still there after a reload",
+      "members": {
+        "parent": "adult",
+        "kid": "child"
+      },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, created_by, created_at) VALUES (?, ?, ?, 'open', NULL, 'family', ?, datetime('now'))",
+          "params": [
+            "ui-p1",
+            "Dad's recovery",
+            "News from the ward.",
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, 'everyone', datetime('now'))",
+          "params": [
+            "ui-e1",
+            "ui-p1",
+            "{{parent}}",
+            "Parent",
+            "Out of surgery",
+            "It went as planned."
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, 'family', datetime('now'))",
+          "params": [
+            "ui-e2",
+            "ui-p1",
+            "{{parent}}",
+            "Parent",
+            "What the surgeon said",
+            "Six weeks of rest."
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__messages (id, page_id, guest_name, guest_message, source, created_at) VALUES (?, ?, 'Aunt Rosa', 'Hugs from all of us.', 'external', datetime('now'))",
+          "params": [
+            "ui-m1",
+            "ui-p1"
+          ]
+        },
+        {
+          "action": "open",
+          "as": "kid"
+        },
+        {
+          "action": "expectVisible",
+          "as": "kid",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "kid",
+          "selector": "[data-testid=\"new-page\"]",
+          "count": 0
+        },
+        {
+          "action": "click",
+          "as": "kid",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "expectVisible",
+          "as": "kid",
+          "selector": "[data-testid=\"entry-card\"][data-entry-id=\"ui-e1\"]"
+        },
+        {
+          "action": "expectVisible",
+          "as": "kid",
+          "selector": "[data-testid=\"entry-card\"][data-entry-id=\"ui-e2\"] [data-testid=\"entry-family-only\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "kid",
+          "selector": "[data-testid=\"entry-card\"][data-entry-id=\"ui-e1\"] [data-testid=\"entry-family-only\"]",
+          "count": 0
+        },
+        {
+          "action": "expectText",
+          "as": "kid",
+          "text": "Hugs from all of us.",
+          "selector": "[data-testid=\"message-list\"]"
+        },
+        {
+          "action": "expectText",
+          "as": "kid",
+          "text": "Only the family reads these.",
+          "selector": "[data-testid=\"messages-note\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "kid",
+          "selector": "[data-testid=\"entry-form\"]",
+          "count": 0
+        },
+        {
+          "action": "expectCount",
+          "as": "kid",
+          "selector": "[data-testid=\"entry-edit\"]",
+          "count": 0
+        },
+        {
+          "action": "expectCount",
+          "as": "kid",
+          "selector": "[data-testid=\"entry-delete\"]",
+          "count": 0
+        },
+        {
+          "action": "expectCount",
+          "as": "kid",
+          "selector": "[data-testid=\"message-delete\"]",
+          "count": 0
+        },
+        {
+          "action": "expectCount",
+          "as": "kid",
+          "selector": "[data-testid=\"page-settings\"]",
+          "count": 0
+        },
+        {
+          "action": "expectCount",
+          "as": "kid",
+          "selector": "[data-testid=\"page-share\"]",
+          "count": 0
+        },
+        {
+          "action": "open",
+          "as": "parent"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"new-page\"]"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-form\"]"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"page-settings\"]"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"page-share\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-edit\"]",
+          "count": 2
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-delete\"]",
+          "count": 2
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"message-delete\"]",
+          "count": 1
+        },
+        {
+          "action": "fill",
+          "as": "parent",
+          "selector": "[data-testid=\"field-entry-title\"]",
+          "value": "Home today"
+        },
+        {
+          "action": "fill",
+          "as": "parent",
+          "selector": "[data-testid=\"field-entry-body\"]",
+          "value": "He walked in on his own."
+        },
+        {
+          "action": "select",
+          "as": "parent",
+          "selector": "[data-testid=\"field-n-audience\"]",
+          "value": "family"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"post-entry\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-card\"]",
+          "count": 3
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-card\"][data-entry-audience=\"family\"]",
+          "count": 2
+        },
+        {
+          "action": "reload",
+          "as": "parent"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "expectText",
+          "as": "parent",
+          "text": "3 updates",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "expectText",
+          "as": "parent",
+          "text": "He walked in on his own.",
+          "selector": "[data-testid=\"entry-list\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-card\"][data-entry-audience=\"family\"]",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "name": "closing a page in its settings is kept across a reload, and an archived page is offered for restore to an adult only and comes back closed",
+      "members": {
+        "parent": "adult",
+        "kid": "child"
+      },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, created_by, created_at) VALUES (?, ?, ?, 'open', NULL, 'family', ?, datetime('now'))",
+          "params": [
+            "ui-p1",
+            "Dad's recovery",
+            "News from the ward.",
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, created_by, created_at) VALUES (?, ?, ?, 'archived', '2026-01-01T00:00:00.000Z', 'family', ?, datetime('now'))",
+          "params": [
+            "ui-p2",
+            "Last year's surgery",
+            "News from the ward.",
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "open",
+          "as": "kid"
+        },
+        {
+          "action": "expectVisible",
+          "as": "kid",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "kid",
+          "selector": "[data-testid=\"archived-pages\"]",
+          "count": 0
+        },
+        {
+          "action": "expectCount",
+          "as": "kid",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p2\"]",
+          "count": 0
+        },
+        {
+          "action": "open",
+          "as": "parent"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"] [data-testid=\"page-closed\"]",
+          "count": 0
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"page-settings\"]"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"delete-page\"]"
+        },
+        {
+          "action": "select",
+          "as": "parent",
+          "selector": "[data-testid=\"field-status\"]",
+          "value": "closed"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"save-settings\"]"
+        },
+        {
+          "action": "expectText",
+          "as": "parent",
+          "text": "Closed to new messages"
+        },
+        {
+          "action": "reload",
+          "as": "parent"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"] [data-testid=\"page-closed\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p2\"]",
+          "count": 0
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"archived-pages\"] summary"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"archived-page\"][data-page-id=\"ui-p2\"] [data-testid=\"archived-page-restore\"]"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p2\"] [data-testid=\"page-closed\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"archived-pages\"]",
+          "count": 0
+        },
+        {
+          "action": "reload",
+          "as": "parent"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p2\"] [data-testid=\"page-closed\"]"
+        },
+        {
+          "action": "reload",
+          "as": "kid"
+        },
+        {
+          "action": "expectVisible",
+          "as": "kid",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p2\"]"
+        }
+      ]
+    },
+    {
+      "name": "a page whose updates cannot be read says so instead of looking empty, and loads when tried again",
+      "members": {
+        "parent": "adult"
+      },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, created_by, created_at) VALUES (?, ?, ?, 'open', NULL, 'family', ?, datetime('now'))",
+          "params": [
+            "ui-p1",
+            "Dad's recovery",
+            "News from the ward.",
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, 'everyone', datetime('now'))",
+          "params": [
+            "ui-e1",
+            "ui-p1",
+            "{{parent}}",
+            "Parent",
+            "Out of surgery",
+            "It went as planned."
+          ]
+        },
+        {
+          "action": "open",
+          "as": "parent"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "fault",
+          "as": "parent",
+          "mode": "down"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"contents-error\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"no-entries\"]",
+          "count": 0
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-form\"]",
+          "count": 0
+        },
+        {
+          "action": "fault",
+          "as": "parent",
+          "mode": "none"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"contents-retry\"]"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-card\"][data-entry-id=\"ui-e1\"]"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-form\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"contents-error\"]",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "what is typed into an open edit form survives the page redrawing behind it, and an edit is kept across a reload",
+      "members": {
+        "parent": "adult"
+      },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, created_by, created_at) VALUES (?, ?, ?, 'open', NULL, 'family', ?, datetime('now'))",
+          "params": [
+            "ui-p1",
+            "Dad's recovery",
+            "News from the ward.",
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, 'everyone', datetime('now'))",
+          "params": [
+            "ui-e1",
+            "ui-p1",
+            "{{parent}}",
+            "Parent",
+            "Out of surgery",
+            "It went as planned."
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__messages (id, page_id, guest_name, guest_message, source, created_at) VALUES (?, ?, 'Aunt Rosa', 'Hugs from all of us.', 'external', datetime('now'))",
+          "params": [
+            "ui-m1",
+            "ui-p1"
+          ]
+        },
+        {
+          "action": "open",
+          "as": "parent"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-card\"][data-entry-id=\"ui-e1\"] [data-testid=\"entry-edit\"]"
+        },
+        {
+          "action": "fill",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-edit-form\"] [name=\"title\"]",
+          "value": "Out of surgery, and awake"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"message-delete\"]"
+        },
+        {
+          "action": "dialog",
+          "as": "parent",
+          "answer": "accept",
+          "text": "Delete this message?"
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"message-card\"]",
+          "count": 0
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-edit-form\"]"
+        },
+        {
+          "action": "select",
+          "as": "parent",
+          "selector": "[data-testid=\"field-e-audience\"]",
+          "value": "family"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-edit-form\"] button[type=\"submit\"]"
+        },
+        {
+          "action": "expectText",
+          "as": "parent",
+          "text": "Out of surgery, and awake",
+          "selector": "[data-testid=\"entry-card\"][data-entry-id=\"ui-e1\"]"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-card\"][data-entry-id=\"ui-e1\"] [data-testid=\"entry-family-only\"]"
+        },
+        {
+          "action": "reload",
+          "as": "parent"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "expectText",
+          "as": "parent",
+          "text": "Out of surgery, and awake",
+          "selector": "[data-testid=\"entry-card\"][data-entry-id=\"ui-e1\"]"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-card\"][data-entry-id=\"ui-e1\"] [data-testid=\"entry-family-only\"]"
+        }
+      ]
+    },
+    {
+      "name": "an update that could not be posted says so in the form and keeps what was typed, and posting it again stores it once",
+      "members": {
+        "parent": "adult"
+      },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, created_by, created_at) VALUES (?, ?, ?, 'open', NULL, 'family', ?, datetime('now'))",
+          "params": [
+            "ui-p1",
+            "Dad's recovery",
+            "News from the ward.",
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "open",
+          "as": "parent"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"no-entries\"]"
+        },
+        {
+          "action": "fill",
+          "as": "parent",
+          "selector": "[data-testid=\"field-entry-title\"]",
+          "value": "Home today"
+        },
+        {
+          "action": "fill",
+          "as": "parent",
+          "selector": "[data-testid=\"field-entry-body\"]",
+          "value": "He walked in on his own."
+        },
+        {
+          "action": "fault",
+          "as": "parent",
+          "mode": "down"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"post-entry\"]"
+        },
+        {
+          "action": "expectText",
+          "as": "parent",
+          "text": "Couldn’t post the update — try again.",
+          "selector": "[data-testid=\"entry-form\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-card\"]",
+          "count": 0
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"no-entries\"]"
+        },
+        {
+          "action": "fault",
+          "as": "parent",
+          "mode": "none"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"post-entry\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-card\"]",
+          "count": 1
+        },
+        {
+          "action": "expectText",
+          "as": "parent",
+          "text": "He walked in on his own.",
+          "selector": "[data-testid=\"entry-list\"]"
+        },
+        {
+          "action": "expectNoText",
+          "as": "parent",
+          "text": "Couldn’t post the update",
+          "selector": "[data-testid=\"entry-form\"]"
+        },
+        {
+          "action": "reload",
+          "as": "parent"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "expectText",
+          "as": "parent",
+          "text": "1 update",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-card\"]",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "deleting a page from its settings removes it and its updates for good, and a page whose deletion did not finish offers no composer and can be deleted again",
+      "members": {
+        "parent": "adult"
+      },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, live, created_by, created_at) VALUES (?, ?, ?, 'open', NULL, 'family', 1, ?, datetime('now'))",
+          "params": [
+            "ui-p1",
+            "Dad's recovery",
+            "News from the ward.",
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, live, created_by, created_at) VALUES (?, ?, ?, 'open', NULL, 'family', 0, ?, datetime('now'))",
+          "params": [
+            "ui-p2",
+            "Half deleted",
+            "News from the ward.",
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, 'everyone', datetime('now'))",
+          "params": [
+            "ui-e1",
+            "ui-p1",
+            "{{parent}}",
+            "Parent",
+            "Out of surgery",
+            "It went as planned."
+          ]
+        },
+        {
+          "action": "open",
+          "as": "parent"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p2\"] [data-testid=\"page-deleting\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"] [data-testid=\"page-deleting\"]",
+          "count": 0
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-form\"]"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"page-settings\"]"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"delete-page\"]"
+        },
+        {
+          "action": "dialog",
+          "as": "parent",
+          "answer": "accept",
+          "text": "Delete \"Dad's recovery\"?"
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p1\"]",
+          "count": 0
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p2\"]"
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"][data-page-id=\"ui-p2\"]"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"page-deleting-note\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"entry-form\"]",
+          "count": 0
+        },
+        {
+          "action": "click",
+          "as": "parent",
+          "selector": "[data-testid=\"page-deleting-note\"] button"
+        },
+        {
+          "action": "dialog",
+          "as": "parent",
+          "answer": "accept",
+          "text": "Delete \"Half deleted\"?"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"no-pages\"]"
+        },
+        {
+          "action": "reload",
+          "as": "parent"
+        },
+        {
+          "action": "expectVisible",
+          "as": "parent",
+          "selector": "[data-testid=\"no-pages\"]"
+        },
+        {
+          "action": "expectCount",
+          "as": "parent",
+          "selector": "[data-testid=\"page-card\"]",
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

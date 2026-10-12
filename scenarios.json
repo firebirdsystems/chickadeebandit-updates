@@ -1,0 +1,1269 @@
+{
+  "scenarios": [
+    {
+      "name": "a child reads the page, its updates and its messages but can write none of them; an adult can",
+      "members": {
+        "parent": "adult",
+        "kid": "child"
+      },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, created_by, created_at) VALUES (?, ?, '', ?, ?, 'everyone', ?, '2026-01-01T00:00:00Z')",
+          "params": [
+            "p1",
+            "Dad's recovery",
+            "open",
+            null,
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "params": [
+            "e1",
+            "p1",
+            "{{parent}}",
+            "Parent",
+            "Out of surgery",
+            "Body text",
+            "everyone",
+            "2026-01-02T00:00:00Z"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "params": [
+            "e2",
+            "p1",
+            "{{parent}}",
+            "Parent",
+            "What the surgeon said",
+            "Body text",
+            "family",
+            "2026-01-02T01:00:00Z"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__messages (id, page_id, guest_name, guest_message, source, created_at) VALUES (?, ?, 'Aunt Rosa', 'Thinking of you all.', 'external', '2026-01-03T00:00:00Z')",
+          "params": [
+            "m1",
+            "p1"
+          ]
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "SELECT id FROM app_updates__pages",
+          "expect": {
+            "status": 200,
+            "rowCount": 1
+          }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "SELECT id, title, audience FROM app_updates__entries ORDER BY created_at",
+          "expect": {
+            "status": 200,
+            "rowCount": 2,
+            "rowsContain": [
+              {
+                "id": "e1",
+                "title": "Out of surgery"
+              },
+              {
+                "id": "e2",
+                "audience": "family"
+              }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "SELECT id, guest_name FROM app_updates__messages",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "m1",
+                "guest_name": "Aunt Rosa"
+              }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "params": [
+            "e_kid",
+            "p1",
+            "{{kid}}",
+            "Kid",
+            "I am posting",
+            "",
+            "everyone",
+            "2026-01-04T00:00:00Z"
+          ],
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "UPDATE app_updates__entries SET audience = 'everyone' WHERE id = 'e2'",
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "DELETE FROM app_updates__entries WHERE id = 'e1'",
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "INSERT INTO app_updates__messages (id, page_id, guest_name, guest_message, source, created_at) VALUES (?, ?, ?, ?, 'external', ?)",
+          "params": [
+            "m_kid",
+            "p1",
+            "Aunt Rosa",
+            "Not really Rosa.",
+            "2026-01-04T00:00:00Z"
+          ],
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "UPDATE app_updates__messages SET guest_message = 'changed' WHERE id = 'm1'",
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "DELETE FROM app_updates__messages WHERE id = 'm1'",
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "INSERT INTO app_updates__pages (id, title, created_by, created_at) VALUES ('p_kid', 'Mine', ?, '2026-01-04T00:00:00Z')",
+          "params": [
+            "{{kid}}"
+          ],
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "UPDATE app_updates__pages SET title = 'Mine now' WHERE id = 'p1'",
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "DELETE FROM app_updates__pages WHERE id = 'p1'",
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "params": [
+            "e3",
+            "p1",
+            "{{parent}}",
+            "Parent",
+            "Home today",
+            "He is home.",
+            "everyone",
+            "2026-01-04T00:00:00Z"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__entries SET audience = 'everyone' WHERE id = 'e2'",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "DELETE FROM app_updates__messages WHERE id = 'm1'",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "SELECT id FROM app_updates__entries WHERE audience = 'everyone'",
+          "expect": {
+            "status": 200,
+            "rowCount": 3
+          }
+        },
+        {
+          "action": "db",
+          "as": "kid",
+          "sql": "SELECT id FROM app_updates__messages",
+          "expect": {
+            "status": 200,
+            "rowCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "an update written without an audience stays with the family, and only the two audiences exist",
+      "members": {
+        "parent": "adult"
+      },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, created_by, created_at) VALUES (?, ?, '', ?, ?, 'everyone', ?, '2026-01-01T00:00:00Z')",
+          "params": [
+            "p1",
+            "Dad's recovery",
+            "open",
+            null,
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          "params": [
+            "e1",
+            "p1",
+            "{{parent}}",
+            "Parent",
+            "No audience given",
+            "Text",
+            "2026-01-04T00:00:00Z"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id, audience FROM app_updates__entries",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "e1",
+                "audience": "family"
+              }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__entries SET audience = 'public' WHERE id = 'e1'",
+          "expect": {
+            "status": 400,
+            "errorIncludes": "CHECK constraint failed"
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "INSERT INTO app_updates__pages (id, title, created_by, created_at) VALUES ('p2', 'Defaults', ?, '2026-01-05T00:00:00Z')",
+          "params": [
+            "{{parent}}"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id, status, messages_visibility FROM app_updates__pages WHERE id = 'p2'",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "p2",
+                "status": "open",
+                "messages_visibility": "family"
+              }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__pages SET messages_visibility = 'anyone' WHERE id = 'p2'",
+          "expect": {
+            "status": 400,
+            "errorIncludes": "CHECK constraint failed"
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__pages SET status = 'deleted' WHERE id = 'p2'",
+          "expect": {
+            "status": 400,
+            "errorIncludes": "CHECK constraint failed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "closing a page stamps its cutoff from the hub's clock and keeps it, reopening clears it, a page cannot be closed without one, and a cutoff still to come is not kept",
+      "members": {
+        "parent": "adult"
+      },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, created_by, created_at) VALUES (?, ?, '', ?, ?, 'everyone', ?, '2026-01-01T00:00:00Z')",
+          "params": [
+            "p1",
+            "Dad's recovery",
+            "open",
+            null,
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__pages SET status = 'closed' WHERE id = 'p1'",
+          "expect": {
+            "status": 400,
+            "errorIncludes": "CHECK constraint failed"
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__pages SET title = ?, about = ?, status = ?, messages_visibility = ?, closed_at = CASE WHEN ? = 'open' THEN NULL ELSE MIN(COALESCE(closed_at, strftime('%Y-%m-%dT%H:%M:%fZ', 'now')), strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) END WHERE id = ?",
+          "params": [
+            "Dad's recovery",
+            "Home now.",
+            "closed",
+            "everyone",
+            "closed",
+            "p1"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id, title, about, status, messages_visibility FROM app_updates__pages WHERE closed_at IS NOT NULL AND closed_at > '2026-01-01T00:00:00Z' AND closed_at LIKE '____-__-__T__:__:__.___Z'",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "p1",
+                "title": "Dad's recovery",
+                "about": "Home now.",
+                "status": "closed",
+                "messages_visibility": "everyone"
+              }
+            ]
+          }
+        },
+        {
+          "action": "seedRaw",
+          "sql": "UPDATE app_updates__pages SET closed_at = '2026-02-02T00:00:00.000Z' WHERE id = 'p1'"
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__pages SET title = ?, about = ?, status = ?, messages_visibility = ?, closed_at = CASE WHEN ? = 'open' THEN NULL ELSE MIN(COALESCE(closed_at, strftime('%Y-%m-%dT%H:%M:%fZ', 'now')), strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) END WHERE id = ?",
+          "params": [
+            "Dad's recovery",
+            "Home now.",
+            "archived",
+            "family",
+            "archived",
+            "p1"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id, status, closed_at, messages_visibility FROM app_updates__pages",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "p1",
+                "status": "archived",
+                "closed_at": "2026-02-02T00:00:00.000Z",
+                "messages_visibility": "family"
+              }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__pages SET status = 'closed', closed_at = MIN(COALESCE(closed_at, strftime('%Y-%m-%dT%H:%M:%fZ', 'now')), strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) WHERE id = ? AND status = 'archived'",
+          "params": [
+            "p1"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id, status, closed_at FROM app_updates__pages",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "p1",
+                "status": "closed",
+                "closed_at": "2026-02-02T00:00:00.000Z"
+              }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__pages SET title = ?, about = ?, status = ?, messages_visibility = ?, closed_at = CASE WHEN ? = 'open' THEN NULL ELSE MIN(COALESCE(closed_at, strftime('%Y-%m-%dT%H:%M:%fZ', 'now')), strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) END WHERE id = ?",
+          "params": [
+            "Dad's recovery",
+            "Home now.",
+            "open",
+            "family",
+            "open",
+            "p1"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id, status FROM app_updates__pages WHERE closed_at IS NULL",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "p1",
+                "status": "open"
+              }
+            ]
+          }
+        },
+        {
+          "action": "seedRaw",
+          "sql": "UPDATE app_updates__pages SET closed_at = '2099-01-01T00:00:00.000Z' WHERE id = 'p1'"
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__pages SET title = ?, about = ?, status = ?, messages_visibility = ?, closed_at = CASE WHEN ? = 'open' THEN NULL ELSE MIN(COALESCE(closed_at, strftime('%Y-%m-%dT%H:%M:%fZ', 'now')), strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) END WHERE id = ?",
+          "params": [
+            "Dad's recovery",
+            "Home now.",
+            "closed",
+            "family",
+            "closed",
+            "p1"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id, status FROM app_updates__pages WHERE closed_at < '2090-01-01' AND closed_at > '2026-01-01'",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "p1",
+                "status": "closed"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a visitor's message is what the visitor typed: an adult can remove one but cannot write one or change one",
+      "members": {
+        "parent": "adult"
+      },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, created_by, created_at) VALUES (?, ?, '', ?, ?, 'everyone', ?, '2026-01-01T00:00:00Z')",
+          "params": [
+            "p1",
+            "Dad's recovery",
+            "open",
+            null,
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, created_by, created_at) VALUES (?, ?, '', ?, ?, 'everyone', ?, '2026-01-01T00:00:00Z')",
+          "params": [
+            "p2",
+            "The new baby",
+            "open",
+            null,
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__messages (id, page_id, guest_name, guest_message, source, created_at) VALUES (?, ?, 'Aunt Rosa', 'Thinking of you all.', 'external', '2026-01-03T00:00:00Z')",
+          "params": [
+            "m1",
+            "p1"
+          ]
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "INSERT INTO app_updates__messages (id, page_id, guest_name, guest_message, source, created_at) VALUES (?, ?, ?, ?, 'external', ?)",
+          "params": [
+            "m_forged",
+            "p1",
+            "Aunt Rosa",
+            "Words she never wrote.",
+            "2026-01-04T00:00:00Z"
+          ],
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__messages SET guest_message = 'Rewritten.' WHERE id = 'm1'",
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__messages SET guest_name = 'Someone else' WHERE id = 'm1'",
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__messages SET page_id = 'p2' WHERE id = 'm1'",
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__messages SET id = 'renamed' WHERE id = 'm1'",
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__messages SET created_at = '2020-01-01T00:00:00Z' WHERE id = 'm1'",
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id, page_id, guest_name, guest_message FROM app_updates__messages",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "m1",
+                "page_id": "p1",
+                "guest_name": "Aunt Rosa",
+                "guest_message": "Thinking of you all."
+              }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "DELETE FROM app_updates__messages WHERE id = 'm1'",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id FROM app_updates__messages",
+          "expect": {
+            "status": 200,
+            "rowCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "deleting a page takes its updates and its visitors' messages with it, and leaves another page alone",
+      "members": {
+        "parent": "adult"
+      },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, created_by, created_at) VALUES (?, ?, '', ?, ?, 'everyone', ?, '2026-01-01T00:00:00Z')",
+          "params": [
+            "p1",
+            "Dad's recovery",
+            "open",
+            null,
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, created_by, created_at) VALUES (?, ?, '', ?, ?, 'everyone', ?, '2026-01-01T00:00:00Z')",
+          "params": [
+            "p2",
+            "The new baby",
+            "open",
+            null,
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "params": [
+            "e1",
+            "p1",
+            "{{parent}}",
+            "Parent",
+            "Out of surgery",
+            "Body text",
+            "everyone",
+            "2026-01-02T00:00:00Z"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "params": [
+            "e2",
+            "p2",
+            "{{parent}}",
+            "Parent",
+            "She is here",
+            "Body text",
+            "everyone",
+            "2026-01-02T00:00:00Z"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__messages (id, page_id, guest_name, guest_message, source, created_at) VALUES (?, ?, 'Aunt Rosa', 'Thinking of you all.', 'external', '2026-01-03T00:00:00Z')",
+          "params": [
+            "m1",
+            "p1"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__messages (id, page_id, guest_name, guest_message, source, created_at) VALUES (?, ?, 'Grandpa Joe', 'Welcome, little one.', 'external', '2026-01-03T00:00:00Z')",
+          "params": [
+            "m2",
+            "p2"
+          ]
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "DELETE FROM app_updates__pages WHERE id = 'p1'",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id FROM app_updates__pages",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "p2"
+              }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id FROM app_updates__entries",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "e2"
+              }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id FROM app_updates__messages",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "m2"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "in a shared space every participant posts updates and may correct or remove one another wrote, not only the steward; none can put another's name, or another time, on one already posted",
+      "context": "shared_space",
+      "members": {
+        "steward": "admin",
+        "pat": "adult",
+        "sam": "adult"
+      },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, created_by, created_at) VALUES (?, ?, '', ?, ?, 'everyone', ?, '2026-01-01T00:00:00Z')",
+          "params": [
+            "p1",
+            "Mum's care",
+            "open",
+            null,
+            "{{steward}}"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__messages (id, page_id, guest_name, guest_message, source, created_at) VALUES (?, ?, 'Aunt Rosa', 'Thinking of you all.', 'external', '2026-01-03T00:00:00Z')",
+          "params": [
+            "m1",
+            "p1"
+          ]
+        },
+        {
+          "action": "db",
+          "as": "pat",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "params": [
+            "e_pat",
+            "p1",
+            "{{pat}}",
+            "Pat",
+            "Tuesday visit",
+            "She ate well.",
+            "everyone",
+            "2026-01-04T00:00:00Z"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "pat",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "params": [
+            "e_pat2",
+            "p1",
+            "{{pat}}",
+            "Pat",
+            "Wednesday visit",
+            "Tired today.",
+            "family",
+            "2026-01-05T00:00:00Z"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "sam",
+          "sql": "SELECT id, title FROM app_updates__entries WHERE id = 'e_pat'",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "e_pat",
+                "title": "Tuesday visit"
+              }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "sam",
+          "sql": "UPDATE app_updates__entries SET title = ?, audience = 'family' WHERE id = 'e_pat'",
+          "params": [
+            "Tuesday's visit"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "steward",
+          "sql": "SELECT id, title, audience FROM app_updates__entries WHERE id = 'e_pat'",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "e_pat",
+                "title": "Tuesday's visit",
+                "audience": "family"
+              }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "sam",
+          "sql": "UPDATE app_updates__entries SET member_id = ? WHERE id = 'e_pat'",
+          "params": [
+            "{{sam}}"
+          ],
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "sam",
+          "sql": "UPDATE app_updates__entries SET author_name = 'Sam' WHERE id = 'e_pat'",
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "steward",
+          "sql": "UPDATE app_updates__entries SET author_name = 'Steward' WHERE id = 'e_pat'",
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "sam",
+          "sql": "UPDATE app_updates__entries SET created_at = '2020-01-01T00:00:00Z' WHERE id = 'e_pat'",
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "sam",
+          "sql": "DELETE FROM app_updates__entries WHERE id = 'e_pat2'",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "pat",
+          "sql": "SELECT id FROM app_updates__entries",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "e_pat"
+              }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "sam",
+          "sql": "DELETE FROM app_updates__messages WHERE id = 'm1'",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "pat",
+          "sql": "SELECT id FROM app_updates__messages",
+          "expect": {
+            "status": 200,
+            "rowCount": 0
+          }
+        },
+        {
+          "action": "db",
+          "as": "sam",
+          "sql": "INSERT INTO app_updates__pages (id, title, created_by, created_at) VALUES ('p2', 'Dad too', ?, '2026-01-05T00:00:00Z')",
+          "params": [
+            "{{sam}}"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "steward",
+          "sql": "SELECT id FROM app_updates__pages",
+          "expect": {
+            "status": 200,
+            "rowCount": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "an update cannot be posted to a page that is gone or is being deleted, so deleting a page in its three statements leaves nothing behind and nothing can slip in between them",
+      "members": {
+        "parent": "adult"
+      },
+      "steps": [
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, created_by, created_at) VALUES (?, ?, '', ?, ?, 'everyone', ?, '2026-01-01T00:00:00Z')",
+          "params": [
+            "p1",
+            "Dad's recovery",
+            "open",
+            null,
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__pages (id, title, about, status, closed_at, messages_visibility, created_by, created_at) VALUES (?, ?, '', ?, ?, 'everyone', ?, '2026-01-01T00:00:00Z')",
+          "params": [
+            "p2",
+            "The new baby",
+            "open",
+            null,
+            "{{parent}}"
+          ]
+        },
+        {
+          "action": "seedRaw",
+          "sql": "INSERT INTO app_updates__messages (id, page_id, guest_name, guest_message, source, created_at) VALUES ('m1', 'p1', 'Aunt Rosa', 'Thinking of you all.', 'external', '2026-01-03T00:00:00Z')"
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "params": [
+            "e1",
+            "p1",
+            "{{parent}}",
+            "Parent",
+            "Home today",
+            "He is home.",
+            "everyone",
+            "2026-01-04T00:00:00Z"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id, page_live FROM app_updates__entries",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "e1",
+                "page_live": 1
+              }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "params": [
+            "e_lost",
+            "no-such-page",
+            "{{parent}}",
+            "Parent",
+            "Home today",
+            "He is home.",
+            "everyone",
+            "2026-01-04T00:00:00Z"
+          ],
+          "expect": {
+            "status": 400,
+            "errorIncludes": "FOREIGN KEY constraint failed"
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at, page_live) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)",
+          "params": [
+            "e_forced",
+            "p1",
+            "{{parent}}",
+            "Parent",
+            "Home today",
+            "He is home.",
+            "everyone",
+            "2026-01-04T00:00:00Z"
+          ],
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__entries SET page_live = 0 WHERE id = 'e1'",
+          "expect": {
+            "status": 403
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "UPDATE app_updates__pages SET live = 0 WHERE id = ?",
+          "params": [
+            "p1"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id, page_live FROM app_updates__entries",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "e1",
+                "page_live": 0
+              }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "params": [
+            "e_late",
+            "p1",
+            "{{parent}}",
+            "Parent",
+            "Home today",
+            "He is home.",
+            "everyone",
+            "2026-01-04T00:00:00Z"
+          ],
+          "expect": {
+            "status": 400,
+            "errorIncludes": "FOREIGN KEY constraint failed"
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "params": [
+            "e_other",
+            "p2",
+            "{{parent}}",
+            "Parent",
+            "Home today",
+            "He is home.",
+            "everyone",
+            "2026-01-04T00:00:00Z"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "DELETE FROM app_updates__entries WHERE page_id = ?",
+          "params": [
+            "p1"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "params": [
+            "e_later",
+            "p1",
+            "{{parent}}",
+            "Parent",
+            "Home today",
+            "He is home.",
+            "everyone",
+            "2026-01-04T00:00:00Z"
+          ],
+          "expect": {
+            "status": 400,
+            "errorIncludes": "FOREIGN KEY constraint failed"
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "DELETE FROM app_updates__pages WHERE id = ?",
+          "params": [
+            "p1"
+          ],
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "INSERT INTO app_updates__entries (id, page_id, member_id, author_name, title, body, audience, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "params": [
+            "e_after",
+            "p1",
+            "{{parent}}",
+            "Parent",
+            "Home today",
+            "He is home.",
+            "everyone",
+            "2026-01-04T00:00:00Z"
+          ],
+          "expect": {
+            "status": 400,
+            "errorIncludes": "FOREIGN KEY constraint failed"
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id FROM app_updates__pages",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "p2"
+              }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id FROM app_updates__entries",
+          "expect": {
+            "status": 200,
+            "rowCount": 1,
+            "rowsContain": [
+              {
+                "id": "e_other"
+              }
+            ]
+          }
+        },
+        {
+          "action": "db",
+          "as": "parent",
+          "sql": "SELECT id FROM app_updates__messages",
+          "expect": {
+            "status": 200,
+            "rowCount": 0
+          }
+        }
+      ]
+    }
+  ]
+}

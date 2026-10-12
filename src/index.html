@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Updates</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: var(--hub-bg, #f9fafb);
+      --surface: var(--hub-surface, #ffffff);
+      --border: var(--hub-border, #e5e7eb);
+      --border-mid: var(--hub-border, #d1d5db);
+      --text: var(--hub-text, #000000);
+      --muted: var(--hub-text-muted, #6b7280);
+      --accent: var(--hub-primary, #111827);
+      --accent-hover: var(--hub-primary-hover, #374151);
+      --accent-fg: var(--hub-primary-fg, #ffffff);
+      --radius: var(--hub-radius, 8px);
+      --red: var(--hub-tint-danger-fg, #b91c1c);
+      --red-soft: var(--hub-tint-danger, #fee2e2);
+      --shadow: 0 1px 3px rgba(15, 23, 42, .07);
+    }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--hub-font, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+      font-size: var(--hub-font-size, 15px);
+      line-height: 1.5;
+    }
+    .app { max-width: 680px; margin: 0 auto; padding: 16px; }
+    .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    h1 { font-size: 1.35rem; line-height: 1.2; }
+    h2 { font-size: 1.05rem; line-height: 1.25; }
+    .muted { color: var(--muted); }
+    .tiny { font-size: .78rem; }
+    .stack { display: grid; gap: 10px; }
+    .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+    .card-link { cursor: pointer; }
+    .card-link:hover { border-color: var(--border-mid); }
+    .item-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .item-title { font-weight: 700; }
+    .item-meta { margin-top: 2px; color: var(--muted); font-size: .8rem; }
+    .badge {
+      display: inline-block; border: 1px solid var(--border); border-radius: 999px;
+      padding: 1px 8px; font-size: .72rem; font-weight: 700; color: var(--muted);
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      border: 1px solid transparent; border-radius: 8px; padding: 8px 12px;
+      font: inherit; font-size: .86rem; font-weight: 700; cursor: pointer;
+      min-height: 38px; background: var(--accent); color: var(--accent-fg);
+    }
+    .btn:hover { background: var(--accent-hover); }
+    .btn:disabled { opacity: .48; cursor: default; }
+    .btn-sm { min-height: 30px; padding: 4px 8px; font-size: .78rem; }
+    .btn-ghost { background: transparent; color: var(--text); border-color: var(--border-mid); }
+    .btn-ghost:hover { background: var(--bg); }
+    .btn-quiet {
+      min-height: 28px; padding: 3px 8px; background: transparent; color: var(--muted);
+      border: 0; font-size: .76rem; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+    .btn-quiet:hover { background: var(--bg); color: var(--text); }
+    .btn-quiet-danger:hover { background: var(--red-soft); color: var(--red); }
+    .form { display: grid; gap: 10px; margin-bottom: 14px; }
+    .field { display: grid; gap: 4px; }
+    label { font-size: .76rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 800; }
+    .check { display: flex; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-size: .84rem; font-weight: 600; color: var(--text); }
+    input, textarea, select {
+      width: 100%; border: 1.5px solid var(--border-mid); border-radius: 8px;
+      padding: 9px 11px; font: inherit; background: var(--surface); color: var(--text);
+    }
+    input[type="checkbox"] { width: auto; }
+    textarea { min-height: 70px; resize: vertical; }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); }
+    .empty, .loading { color: var(--muted); text-align: center; padding: 28px 16px; }
+    .error { background: var(--red-soft); color: var(--red); padding: 9px 12px; border-radius: 8px; margin-bottom: 10px; font-size: .86rem; }
+    .load-error { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: var(--hub-tint-danger, #fee2e2); color: var(--hub-tint-danger-fg, #b91c1c); font-size: 0.9rem; display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+    .load-error-retry { background: none; border: 1px solid currentColor; border-radius: 8px; padding: 5px 10px; font: inherit; font-weight: 600; color: inherit; cursor: pointer; flex-shrink: 0; }
+    .notice { background: var(--bg); color: var(--muted); padding: 9px 12px; border-radius: 8px; margin-bottom: 10px; font-size: .82rem; border: 1px solid var(--border); }
+    .thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .thumb {
+      width: 96px; height: 96px; object-fit: cover; border-radius: 8px;
+      border: 1px solid var(--border); display: block;
+    }
+    .thumb-wrap { position: relative; }
+    .thumb-drop {
+      position: absolute; top: 2px; right: 2px; border: 0; border-radius: 999px;
+      width: 22px; height: 22px; line-height: 1; cursor: pointer; font-weight: 800;
+      background: rgba(17, 24, 39, .78); color: #fff; font-size: .8rem; padding: 0;
+    }
+    .cover { width: 100%; max-height: 220px; object-fit: cover; border-radius: var(--radius); margin-bottom: 10px; }
+    .post-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+    .post-body { margin-top: 4px; white-space: pre-wrap; }
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,.4);
+      display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 1000;
+    }
+    .modal {
+      background: var(--surface); color: var(--text); border-radius: var(--radius);
+      max-width: 520px; width: 100%; padding: 20px; max-height: 90vh; overflow: auto;
+    }
+    .link-row { display: flex; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .search-input {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 9px 11px; font: inherit; background: var(--surface); color: var(--text);
+      margin-bottom: 10px;
+    }
+    .search-input:focus { outline: none; border-color: var(--accent, #6366f1); }
+    .archived { margin-top: 14px; }
+    .archived summary { cursor: pointer; color: var(--muted); font-size: .82rem; font-weight: 700; margin-bottom: 8px; }
+    .section-title { margin: 18px 0 8px; font-size: .76rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 800; }
+    .entry-title { font-weight: 700; font-size: 1.02rem; }
+  </style>
+  <base href="/run/updates/">
+</head>
+<body>
+<div class="app">
+  <div id="root" class="loading">Loading…</div>
+</div>
+
+<script type="module">
+import { esc, isAdult, hubConfirm, hubAlert, createFilesHelper, createShareHelper, searchMatch, activeShareLinks, SHARE_EXPIRY_CHOICES, DEFAULT_SHARE_EXPIRY_HOURS, glyph, chickadee } from "/hub-sdk.js";
+import {
+  parseIds, parseThumbs, tilePhotoId, thumbsFor, photoRoom, formatWhen, formatDay,
+  pageById as pageByIdOf, entryAuthor as entryAuthorOf, canManage as canManageOf, resolveCurrentMember,
+  onSharePage, entryDraft, pageDraft, pageSettingsPatch, closedAtFor, takesMessages,
+  withEntryStats, entryStatsAfter, takePage, shareSummary,
+  searchableFields, entrySearchableFields,
+  MAX_TITLE, MAX_BODY, MAX_PHOTOS_PER_ENTRY, MAX_MESSAGES_PER_LINK, PAGE_SIZE, SAVE_PAGE_SQL, RESTORE_PAGE_SQL,
+  DELETE_PAGE_SQL, isLive, postRefusal,
+} from "./logic.js";
+
+// --- Hub runtime globals (empty in demo mode) --------------------------------
+const CONTEXT = window.__CONTEXT_URL ?? "";
+const DB = window.__DB_URL ?? "";
+const FILES_URL = window.__FILES_URL ?? "";
+const HUB_MEMBER = window.__CURRENT_MEMBER ?? null;
+const LIMITS = window.__RESOURCE_LIMITS ?? {};
+
+const files = createFilesHelper(FILES_URL);
+const share = createShareHelper(window.__SHARE_CREATE_URL, window.__SHARE_REVOKE_URL, window.__SHARE_LIST_URL);
+
+// Mirrors the hub's own upload allowlist for images.
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"];
+
+// --- App state ---------------------------------------------------------------
+let members = [];
+let currentMember = null;
+let pages = [];
+let archivedPages = [];      // loaded only for adults
+let entries = [];            // entries of the open page only, newest first
+let messages = [];           // visitor messages of the open page only, newest first
+let entriesMore = false;     // older entries exist beyond what is loaded
+let messagesMore = false;
+let contents = "idle";       // the open page's entries and messages: idle | loading | ready | failed
+let openPageId = null;
+let editingEntryId = null;
+let view = "list";           // list | page | new-page | settings
+let pageQ = "";              // page-list search (see logic.js searchableFields)
+let entryQ = "";             // in-page search (entrySearchableFields)
+let error = "";
+let loadFailed = false;      // a load failed; cleared when one succeeds
+let notice = "";
+// The composer's photos: uploaded, attached to no row yet. An entry being
+// posted takes its photos OUT of this list first, so nothing that tidies the
+// composer (leaving the page, the × on a tile) can delete a file the entry is
+// about to reference.
+let pendingPhotos = [];      // { id, thumbnailId }
+let uploadingCount = 0;      // files chosen and still uploading
+// The composer epoch an entry INSERT is in flight for, or null. Scoped to its
+// composer so one page's slow request cannot disable another page's form.
+let postingEpoch = null;
+// The id the composer's next entry will take. Kept across a retry, so an INSERT
+// whose answer was lost and is sent again meets its own row instead of making
+// a second one that shares the first one's photos.
+let composerEntryId = null;
+// The page id an older page of each kind is being read for, or null.
+let loadingOlder = { entries: null, messages: null };
+// Bumped each time the new-page form or an entry editor is opened or closed,
+// and written into that form's data-draft name. A request that comes back can
+// then tell "this form, redrawn" (same name) from "a later form" (new name).
+let formNonce = 0;
+// Demo mode only: what each page held when it was last left.
+const demoContents = new Map();
+// Each read of a page's contents takes the next number; only the newest one
+// asked for is ever applied.
+let contentsSeq = 0;
+let demoSeeded = false;
+// Bumped whenever the open page's lists are replaced wholesale. An older page
+// asked for before that belongs after a list that no longer exists.
+let listGen = 0;
+// Bumped whenever the composer is abandoned. An upload or a post that started
+// under an older value finished for a composer that no longer exists.
+let composerEpoch = 0;
+let lastFocusKey = "";
+let shareModalEl = null;
+let shareLinks = [];
+let shareEntitled = false;
+
+function nowIso() { return new Date().toISOString(); }
+function isPosting() { return postingEpoch !== null && postingEpoch === composerEpoch; }
+// Rows by id, first one wins: a row that arrives twice (a post answered after
+// a reload already read it, an older page asked for twice) is drawn once.
+function uniqueById(rows) {
+  const seen = new Set();
+  return rows.filter(row => !seen.has(row.id) && seen.add(row.id));
+}
+
+// Thin bindings over src/logic.js — the pure functions there take the roster,
+// the page list and an is-adult flag explicitly so Node can unit-test them.
+function pageById(id) { return pageByIdOf(pages, id); }
+function entryAuthor(entry) { return entryAuthorOf(entry, members); }
+function canManage() { return canManageOf(isAdult(currentMember)); }
+
+async function db(sql, params = []) {
+  if (!DB) return { rows: [] };
+  const res = await fetch(DB, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sql, params }),
+  });
+  // A refusal is a non-2xx status with `{ error }`, and a proxy can answer with
+  // a body that is not JSON at all: both throw, so callers' catch blocks run.
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json || typeof json !== "object" || json.error) throw new Error(json?.error || "Couldn’t reach the hub. Try again.");
+  return json;
+}
+
+async function loadMembers() {
+  if (!CONTEXT) {
+    members = [
+      { id: "demo-1", name: "Alex", role: "adult" },
+      { id: "demo-2", name: "Jordan", role: "adult" },
+      { id: "demo-3", name: "Casey", role: "child" },
+    ];
+  } else {
+    // A roster that cannot be read is a failed load, not an empty household.
+    const res = await fetch(`${CONTEXT}?keys=family.members`);
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json || typeof json !== "object" || json.error) throw new Error("Couldn’t reach the hub. Try again.");
+    // A 200 that names the roster in `$errors` is the hub failing to read it.
+    if (Array.isArray(json.$errors) && json.$errors.includes("family.members")) throw new Error("Couldn’t reach the hub. Try again.");
+    members = json["family.members"] ?? [];
+  }
+  currentMember = resolveCurrentMember(HUB_MEMBER, members, !!(CONTEXT || DB));
+}
+
+async function loadPages() {
+  if (!DB) {
+    // Once: a later refresh must not throw away what was done in the demo.
+    if (demoSeeded) return;
+    demoSeeded = true;
+    pages = [{
+      id: "demo-page",
+      title: "Dad's recovery",
+      about: "News from the hospital and, soon, from home. Thank you for thinking of him.",
+      cover_file_ids: "[]",
+      status: "open",
+      closed_at: null,
+      messages_visibility: "family",
+      created_by: "demo-1",
+      created_at: nowIso(),
+      entry_count: 1,
+      last_at: nowIso(),
+    }];
+    return;
+  }
+  // Two statements, not one correlated subquery: the row-policy rewriter
+  // refuses a governed table referenced inside a subquery, and a refusal is
+  // total — the list would never load at all.
+  const [pageRows, statRows] = await Promise.all([
+    db("SELECT * FROM app_updates__pages WHERE status IN ('open', 'closed') ORDER BY created_at DESC"),
+    db("SELECT page_id, COUNT(*) AS entry_count, MAX(created_at) AS last_at FROM app_updates__entries GROUP BY page_id"),
+  ]);
+  pages = withEntryStats(pageRows.rows, statRows.rows);
+}
+
+// Archived pages are off the list and off every share link, but their entries
+// and photos are still stored — so an adult can bring one back or delete it.
+async function loadArchivedPages() {
+  if (!DB) return;
+  if (!canManage()) { archivedPages = []; return; }
+  const { rows } = await db("SELECT * FROM app_updates__pages WHERE status = 'archived' ORDER BY created_at DESC");
+  archivedPages = rows;
+}
+
+// One more row than a page holds, so "there are older ones" is known without a
+// second query. `before` reads the next page back from the oldest row loaded.
+// Ordered by time and then id, and paged on both: two rows posted in the same
+// millisecond on either side of a page boundary are neither skipped nor
+// repeated.
+function readRows(table, pageId, before) {
+  return before
+    ? db(`SELECT * FROM ${table} WHERE page_id = ? AND (created_at < ? OR (created_at = ? AND id < ?)) ORDER BY created_at DESC, id DESC LIMIT ${PAGE_SIZE + 1}`,
+        [pageId, before.created_at, before.created_at, before.id])
+    : db(`SELECT * FROM ${table} WHERE page_id = ? ORDER BY created_at DESC, id DESC LIMIT ${PAGE_SIZE + 1}`, [pageId]);
+}
+function readEntries(pageId, before) { return readRows("app_updates__entries", pageId, before); }
+function readMessages(pageId, before) { return readRows("app_updates__messages", pageId, before); }
+
+// Never throws. The answer is applied only if the page it was asked for is
+// still the open one: a slow answer for a page the member has since left must
+// not draw its updates under another page's title.
+//
+// `background` is a re-read of a page that is already drawn (a refresh): it
+// neither blanks the page to "Loading…" while it runs nor turns a page that
+// loaded into "couldn't load" if it fails. What is on screen stays.
+async function loadPageContents(pageId, { background = false } = {}) {
+  const seq = ++contentsSeq;
+  if (!background) contents = "loading";
+  let entryPage, messagePage;
+  if (!DB && (demoContents.has(pageId) || pageId !== "demo-page")) {
+    // What the page held when it was left, or nothing for one made in the demo.
+    entryPage = { more: false, rows: demoContents.get(pageId)?.entries ?? [] };
+    messagePage = { more: false, rows: demoContents.get(pageId)?.messages ?? [] };
+  } else if (!DB) {
+    entryPage = { more: false, rows: [{
+      id: "demo-entry",
+      page_id: "demo-page",
+      member_id: "demo-1",
+      author_name: "Alex",
+      title: "Out of surgery",
+      body: "It went as planned. He is awake, tired, and already asking for the crossword.",
+      file_ids: "[]",
+      photo_thumbs: "{}",
+      audience: "everyone",
+      edited_at: null,
+      created_at: nowIso(),
+    }] };
+    messagePage = { more: false, rows: [{
+      id: "demo-message",
+      page_id: "demo-page",
+      guest_name: "Aunt Rosa",
+      guest_message: "So relieved. Give him a hug from all of us.",
+      source: "external",
+      created_at: nowIso(),
+    }] };
+  } else {
+    try {
+      const [entryRows, messageRows] = await Promise.all([readEntries(pageId), readMessages(pageId)]);
+      entryPage = takePage(entryRows.rows);
+      messagePage = takePage(messageRows.rows);
+    } catch {
+      if (openPageId === pageId && seq === contentsSeq && !background) contents = "failed";
+      return;
+    }
+  }
+  if (openPageId !== pageId || seq !== contentsSeq) return;
+  listGen += 1;
+  entries = entryPage.rows;
+  entriesMore = entryPage.more;
+  messages = messagePage.rows;
+  messagesMore = messagePage.more;
+  contents = "ready";
+}
+
+async function loadOlder(kind) {
+  const pageId = openPageId;
+  // One at a time, held in state: the button itself is rebuilt by any redraw.
+  if (!pageId || loadingOlder[kind] === pageId) return;
+  const list = kind === "entries" ? entries : messages;
+  // Every loaded row deleted, with older ones still stored: read from the top.
+  const oldest = list[list.length - 1] ?? null;
+  loadingOlder[kind] = pageId;
+  const gen = listGen;
+  render();
+  try {
+    const { rows } = await (kind === "entries" ? readEntries(pageId, oldest) : readMessages(pageId, oldest));
+    // Applied only to the list it was asked after. If a reload replaced the
+    // list meanwhile, these rows continue from a tail that is gone: appending
+    // them would leave a gap, and their "no more" would hide it for good.
+    // The reloaded list has its own "Show older".
+    if (openPageId === pageId && gen === listGen) {
+      const older = takePage(rows);
+      if (kind === "entries") { entries = uniqueById([...entries, ...older.rows]); entriesMore = older.more; }
+      else { messages = uniqueById([...messages, ...older.rows]); messagesMore = older.more; }
+    }
+  } catch {
+    // A dialog, not the error line: that is drawn at the top of the page and
+    // the button that was pressed is at the foot of a long list.
+    if (openPageId === pageId) hubAlert("Couldn't load older ones", { description: "Try again." });
+  }
+  if (loadingOlder[kind] === pageId) loadingOlder[kind] = null;
+  if (openPageId === pageId) render();
+}
+
+function openPage(id) {
+  leaveComposer();
+  openPageId = id;
+  // A query typed on one page must not silently filter the next one's.
+  entryQ = "";
+  listGen += 1;
+  entries = [];
+  messages = [];
+  entriesMore = false;
+  messagesMore = false;
+  view = "page";
+  // Drawn at once, as loading: the list must not stay clickable underneath.
+  contents = "loading";
+  render();
+  loadPageContents(id).then(() => { if (openPageId === id) render(); });
+}
+
+async function refresh() {
+  error = "";
+  try {
+    await Promise.all([loadMembers(), loadPages()]);
+    await loadArchivedPages();
+    if (openPageId && !pageById(openPageId)) { leaveComposer(); openPageId = null; view = "list"; }
+    loadFailed = false;
+  } catch (e) {
+    // The list shows the banner; an open page keeps its own message.
+    loadFailed = true;
+    if (view !== "list") error = e.message;
+    render();
+    return;
+  }
+  if (openPageId) await loadPageContents(openPageId, { background: contents === "ready" });
+  render();
+}
+
+// --- Forms -------------------------------------------------------------------
+
+// A refused save is said inside the form it came from, with no re-render:
+// redrawing the page would throw away what was typed.
+function formFailed(form, msg) {
+  if (!form.isConnected) { error = msg; return render(); }
+  let line = form.querySelector("[data-form-error]");
+  if (!line) {
+    line = document.createElement("div");
+    line.className = "error";
+    line.setAttribute("role", "alert");
+    line.setAttribute("data-form-error", "");
+    form.querySelector('button[type="submit"]').before(line);
+  }
+  line.textContent = msg;
+}
+// One save at a time: the submit button is off while the hub is answering.
+// Marked on the form, so a redraw during the request keeps it off (see
+// captureDrafts) instead of handing back a live button to press twice.
+function formBusy(form, busy) {
+  const btn = form.querySelector('button[type="submit"]');
+  if (btn) btn.disabled = busy;
+  if (busy) { form.dataset.busy = "1"; form.querySelector("[data-form-error]")?.remove(); }
+  else delete form.dataset.busy;
+}
+// The form of this name now on screen: the same element, or the one a redraw
+// put in its place. Null once the member has left it.
+function liveForm(name) {
+  return [...document.querySelectorAll("form[data-draft]")].find(f => f.dataset.draft === name) ?? null;
+}
+// A request for the named form ended in failure. Said in the form if it is
+// still there, and as a dialog if the member has moved on, so it is never lost.
+function failForm(name, msg) {
+  const form = liveForm(name);
+  if (!form) { hubAlert(msg); return; }
+  formBusy(form, false);
+  formFailed(form, msg);
+}
+
+// --- Pages -------------------------------------------------------------------
+
+async function createPage(form) {
+  if (!canManage()) { error = "Only adults can start a page."; return render(); }
+  const draft = pageDraft({ title: form.title.value, about: form.about.value });
+  if (draft.error) { formFailed(form, draft.error); return; }
+
+  const page = {
+    id: crypto.randomUUID(),
+    ...draft.value,
+    cover_file_ids: "[]",
+    status: "open",
+    closed_at: null,
+    // Visitors do not read each other's messages until an adult turns it on.
+    messages_visibility: "family",
+    created_by: currentMember.id,
+    created_at: nowIso(),
+  };
+  const name = form.dataset.draft;
+  formBusy(form, true);
+  try {
+    await db(
+      `INSERT INTO app_updates__pages
+         (id, title, about, cover_file_ids, status, messages_visibility, created_by, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [page.id, page.title, page.about, page.cover_file_ids, page.status,
+       page.messages_visibility, page.created_by, page.created_at],
+    );
+  } catch {
+    failForm(name, "Couldn’t start the page — try again.");
+    return;
+  }
+  pages = [{ ...page, entry_count: 0, last_at: null }, ...pages];
+  // Only if the member is still on THIS form (redrawn or not): they may have
+  // gone elsewhere while the hub was answering, even to a second new-page
+  // form, and that view is theirs to keep.
+  if (view !== "new-page" || !liveForm(name)) { if (view === "list") render(); return; }
+  openPageId = page.id;
+  entries = [];
+  messages = [];
+  entriesMore = false;
+  messagesMore = false;
+  contents = "ready";
+  entryQ = "";
+  view = "page";
+  error = "";
+  render();
+}
+
+async function savePageSettings(form) {
+  const page = pageById(openPageId);
+  if (!page) { error = "That page is gone."; return render(); }
+  if (!canManage()) { error = "Only adults can change a page."; return render(); }
+  const patch = pageSettingsPatch({
+    title: form.title.value,
+    about: form.about.value,
+    status: form.status.value,
+    messages_visibility: form.messages_visibility.value,
+  }, page);
+  if (patch.error) { formFailed(form, patch.error); return; }
+  if (patch.fields.status === "archived" && !await hubConfirm(`Archive "${patch.fields.title}"?`, {
+    description: "It leaves the list and every share link to it stops opening. You can restore it later, closed to new messages.",
+    confirmLabel: "Archive",
+  })) return;
+  const name = form.dataset.draft;
+  formBusy(liveForm(name) ?? form, true);
+  try {
+    // The statement stamps closed_at from the hub's clock (logic.js).
+    const { changed } = await db(SAVE_PAGE_SQL, patch.params);
+    if (changed === 0) throw new Error("unchanged");
+  } catch {
+    failForm(name, "Couldn’t save the page — try again.");
+    return;
+  }
+  const saved = liveForm(name);
+  if (saved) formBusy(saved, false);
+  // A refresh during the request replaces the page objects; patch the live one.
+  const live = pageById(page.id) ?? page;
+  Object.assign(live, patch.fields, { closed_at: closedAtFor(patch.fields.status, live, nowIso()) });
+  const stillHere = view === "settings" && openPageId === live.id;
+  // An archived page drops out of the list query — and out of every share
+  // link, since shareable.visible_where admits only open/closed.
+  if (live.status === "archived") {
+    pages = pages.filter(p => p.id !== live.id);
+    archivedPages = [live, ...archivedPages.filter(p => p.id !== live.id)];
+    if (openPageId === live.id) { leaveComposer(); openPageId = null; view = "list"; }
+    notice = `"${live.title}" was archived. Its share links no longer open.`;
+  } else if (stillHere) {
+    view = "page";
+  }
+  if (stillHere) error = "";
+  render();
+}
+
+async function setCoverPhoto(input) {
+  const page = pageById(openPageId);
+  const file = input.files?.[0];
+  input.value = "";
+  if (!page || !file) return;
+  const showing = () => openPageId === page.id && (view === "settings" || view === "page");
+  let uploaded;
+  try {
+    uploaded = await uploadImage(file);
+    // The photo this replaces is reclaimed by the hub: cover_file_ids is
+    // declared in update_file_list_columns.
+    const { changed } = await db("UPDATE app_updates__pages SET cover_file_ids = ? WHERE id = ?",
+      [JSON.stringify([uploaded.id]), page.id]);
+    if (changed === 0) throw new Error("This page could not be changed.");
+  } catch (e) {
+    if (uploaded) {
+      // An upload no row references is removed. But a failure can be a lost
+      // answer to an UPDATE that was stored, so the page is asked first, and
+      // if it cannot say, the file is left: bytes nothing names are a smaller
+      // harm than a page whose photo was deleted from under it.
+      const stored = await db("SELECT cover_file_ids FROM app_updates__pages WHERE id = ?", [page.id]).catch(() => null);
+      const kept = stored && parseIds(stored.rows[0]?.cover_file_ids).includes(uploaded.id);
+      if (kept) {
+        (pageById(page.id) ?? page).cover_file_ids = JSON.stringify([uploaded.id]);
+        if (showing()) { error = ""; render(); }
+        return;
+      }
+      if (stored) await files.delete(uploaded.id).catch(() => {});
+    }
+    // Said on the settings screen it was asked from, or as a dialog if the
+    // member has since moved on.
+    if (view === "settings" && openPageId === page.id) { error = e.message; render(); }
+    else hubAlert("Couldn't change the photo", { description: e.message });
+    return;
+  }
+  (pageById(page.id) ?? page).cover_file_ids = JSON.stringify([uploaded.id]);
+  if (showing()) { if (view === "settings") error = ""; render(); }
+}
+
+async function deletePage(id) {
+  if (!canManage()) return;
+  const page = pageById(id) ?? archivedPages.find(p => p.id === id) ?? null;
+  if (!await hubConfirm(`Delete "${page?.title ?? "this page"}"?`, {
+    description: "Every update, photo and message on it is deleted too, and its share links stop working. This cannot be undone.",
+    confirmLabel: "Delete",
+  })) return;
+  // Three statements, in order (logic.js DELETE_PAGE_SQL): stop the page
+  // taking updates, delete its updates so their photos are reclaimed, delete
+  // the page. The hub refuses to run them as one batch.
+  const [stop, dropEntries, dropPage] = DELETE_PAGE_SQL;
+  let started = false;
+  try {
+    const { changed } = await db(stop, [id]);
+    if (changed === 0) {
+      // Nothing to stop: someone else has already deleted it.
+      await refresh();
+      return;
+    }
+    started = true;
+    await db(dropEntries, [id]);
+    await db(dropPage, [id]);
+  } catch (e) {
+    // Half done is said as half done, and the screen is re-read to match. The
+    // page takes no updates from here on, so deleting it again is all it needs.
+    const msg = started
+      ? "The page could not be fully deleted. It takes no new updates now; delete it again to finish."
+      : e.message;
+    if (started) await refresh();
+    error = msg;
+    render();
+    return;
+  }
+  pages = pages.filter(p => p.id !== id);
+  archivedPages = archivedPages.filter(p => p.id !== id);
+  if (openPageId === id) { leaveComposer(); openPageId = null; entries = []; messages = []; view = "list"; }
+  error = "";
+  render();
+}
+
+// Restored as closed, not open, with a cutoff (logic.js RESTORE_PAGE_SQL).
+async function restorePage(id, button) {
+  const page = archivedPages.find(p => p.id === id);
+  if (!page || !canManage()) return;
+  // Off while the hub answers: a second click would match nothing, and
+  // "could not be restored" would be said about a page that was.
+  if (button) button.disabled = true;
+  if (!DB) {
+    // Demo mode has no hub to re-read from: the move is made here.
+    archivedPages = archivedPages.filter(p => p.id !== id);
+    pages = [{ ...page, status: "closed", closed_at: closedAtFor("closed", page, nowIso()), entry_count: 0, last_at: null }, ...pages];
+    notice = `"${page.title}" is back, closed to new messages. Open it in its settings to take more.`;
+    return render();
+  }
+  try {
+    const { changed } = await db(RESTORE_PAGE_SQL, [id]);
+    await refresh();
+    // Nothing changed and it is still archived: that is a refusal. Nothing
+    // changed because someone already restored it is not.
+    if (changed === 0 && archivedPages.some(p => p.id === id)) error = "This page could not be restored.";
+    else notice = `"${page.title}" is back, closed to new messages. Open it in its settings to take more.`;
+  } catch (e) { error = e.message; }
+  render();
+}
+
+// --- Photos ------------------------------------------------------------------
+
+// `thumbnail` asks the hub to keep a small copy with the photo. Only an
+// entry's photos want one: the cover is drawn as a banner, from the photo.
+async function uploadImage(file, { thumbnail = false } = {}) {
+  if (!IMAGE_TYPES.includes(file.type)) {
+    throw new Error(`${file.name} isn't an image the hub accepts (JPEG, PNG, WebP, GIF or HEIC).`);
+  }
+  const max = LIMITS.max_file_bytes ?? 10 * 1024 * 1024;
+  if (file.size > max) {
+    throw new Error(`${file.name} is larger than the ${Math.round(max / (1024 * 1024))} MB limit.`);
+  }
+  return files.upload(file, { thumbnail });
+}
+
+async function addPendingPhotos(input) {
+  const chosen = [...(input.files ?? [])];
+  input.value = "";
+  if (!chosen.length || isPosting()) return;
+  if (chosen.length > photoRoom(pendingPhotos.length, uploadingCount)) {
+    error = `An update can carry ${MAX_PHOTOS_PER_ENTRY} photos.`;
+    return render();
+  }
+  const epoch = composerEpoch;
+  let left = chosen.length;
+  uploadingCount += left;
+  error = "";
+  render();
+  try {
+    for (const file of chosen) {
+      const { id, thumbnailId } = await uploadImage(file, { thumbnail: true });
+      if (epoch !== composerEpoch) {
+        // The composer these were chosen for is gone. Nothing will ever
+        // reference this file, so it is removed and the rest are not sent.
+        // Deleting a photo deletes its small copy with it.
+        await files.delete(id).catch(() => {});
+        return;
+      }
+      left -= 1;
+      uploadingCount -= 1;
+      pendingPhotos.push({ id, thumbnailId });
+    }
+  } catch (e) {
+    if (epoch === composerEpoch) error = e.message;
+  } finally {
+    // Only this composer's page is redrawn; another view is not this one's.
+    if (epoch === composerEpoch) {
+      uploadingCount -= left;
+      render();
+    }
+  }
+}
+
+// A photo marked `unsure` went out with a post whose answer never came back
+// and whose row could not be re-read: a stored update may reference it, so it
+// is taken off the composer but never deleted.
+function discardPhoto(photo) {
+  if (!photo.unsure) files.delete(photo.id).catch(() => {});
+}
+
+function dropPendingPhoto(id) {
+  // Only a photo still waiting in the composer. One that an in-flight post has
+  // already taken is about to be referenced by a row.
+  const photo = pendingPhotos.find(p => p.id === id);
+  if (!photo) return;
+  pendingPhotos = pendingPhotos.filter(p => p.id !== id);
+  discardPhoto(photo);
+  render();
+}
+
+// Abandons the composer: its unposted photos are referenced by nothing, so
+// they are reclaimed rather than left as bytes nobody can name. Uploads still
+// running see the new epoch and remove their own.
+function leaveComposer() {
+  if (!DB && openPageId) demoContents.set(openPageId, { entries, messages });
+  formNonce += 1;
+  composerEpoch += 1;
+  uploadingCount = 0;
+  composerEntryId = null;
+  const stale = pendingPhotos;
+  pendingPhotos = [];
+  for (const photo of stale) discardPhoto(photo);
+  editingEntryId = null;
+  error = "";
+}
+
+// --- Entries -----------------------------------------------------------------
+
+async function createEntry(form) {
+  const page = pageById(openPageId);
+  if (!page || isPosting()) return;
+  if (!canManage()) { error = "Only adults can post an update."; return render(); }
+  const typed = { title: form.title.value, body: form.body.value, audience: form.audience.value };
+  const draft = entryDraft(typed);
+  if (draft.error) { formFailed(form, draft.error); return; }
+
+  // Everything that can fail is done before the photos are taken.
+  composerEntryId ??= crypto.randomUUID();
+  const epoch = composerEpoch;
+  // Taken out of the composer for the length of the request (see pendingPhotos).
+  const sent = pendingPhotos;
+  pendingPhotos = [];
+  postingEpoch = epoch;
+  const entry = {
+    id: composerEntryId,
+    page_id: page.id,
+    member_id: currentMember.id,
+    // Denormalized on purpose: the share page's feed projects columns from this
+    // row and cannot join the roster. In-app rendering still prefers the roster
+    // name, so a later rename follows old entries there.
+    author_name: currentMember.name ?? "",
+    ...draft.value,
+    file_ids: JSON.stringify(sent.map(p => p.id)),
+    // Always written with file_ids: each photo's small copy, keyed by the photo.
+    photo_thumbs: JSON.stringify(thumbsFor(sent)),
+    edited_at: null,
+    created_at: nowIso(),
+  };
+  const name = form.dataset.draft;
+  formBusy(form, true);
+  // Nothing more may be attached to an update that has been sent.
+  const picker = form.querySelector("#photos");
+  if (picker) picker.disabled = true;
+  let insertError = null;
+  try {
+    await db(
+      `INSERT INTO app_updates__entries
+         (id, page_id, member_id, author_name, title, body, file_ids, photo_thumbs, audience, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [entry.id, entry.page_id, entry.member_id, entry.author_name, entry.title, entry.body,
+       entry.file_ids, entry.photo_thumbs, entry.audience, entry.created_at],
+    );
+  } catch (e) { insertError = e; }
+
+  // A failure is not proof that nothing was stored: the answer to an INSERT
+  // that reached the hub can be lost, and a retry of one then meets its own
+  // row. So the row is asked for by its id. `stored` is the row, null when the
+  // hub says there is none, and undefined when it could not be asked.
+  let stored = entry;
+  if (insertError) {
+    stored = await db("SELECT * FROM app_updates__entries WHERE id = ?", [entry.id])
+      .then(({ rows }) => rows[0] ?? null, () => undefined);
+  }
+  if (postingEpoch === epoch) postingEpoch = null;
+  const sameComposer = epoch === composerEpoch;
+
+  if (!stored) {
+    // Known not stored: the photos are free to go back, or to be deleted.
+    // Not known: they are kept from deletion (see discardPhoto).
+    const back = stored === null ? sent : sent.map(p => ({ ...p, unsure: true }));
+    if (stored === null && postRefusal(insertError.message) === "page-gone") {
+      // The database refused it: the page was deleted, or is being deleted,
+      // by someone else. Nothing can be posted to it again, so the photos go
+      // and the screen is re-read; the text is said back so it is not lost.
+      for (const photo of back) discardPhoto(photo);
+      if (sameComposer) composerEntryId = null;
+      await refresh();
+      hubAlert("This page has been deleted", {
+        description: `Your update “${typed.title.trim()}” was not posted, because the page it was for is gone.`,
+      });
+      return;
+    }
+    if (sameComposer) {
+      pendingPhotos = [...back, ...pendingPhotos];
+      render();
+      failForm(name, "Couldn’t post the update — try again.");
+    } else {
+      // The member has left this composer, and its text went with it.
+      for (const photo of back) discardPhoto(photo);
+      hubAlert("Your update wasn’t posted", { description: `“${typed.title.trim()}” could not be saved. Open the page and post it again.` });
+    }
+    return;
+  }
+
+  // Stored. If it was an earlier try that stored it, the row is what the hub
+  // holds, which may not be what the form says now.
+  const asTyped = stored.title === entry.title && (stored.body ?? "") === entry.body
+    && stored.audience === entry.audience && stored.file_ids === entry.file_ids;
+  // The page it was posted to may no longer be the one on screen.
+  const target = pageById(page.id);
+  if (openPageId === page.id) {
+    // A reload that already read this row must not draw it twice.
+    entries = uniqueById([stored, ...entries]);
+    if (target) Object.assign(target, entryStatsAfter(target, entries, 1));
+  } else if (target) {
+    target.entry_count = Number(target.entry_count ?? 0) + 1;
+    target.last_at = stored.created_at;
+  }
+  if (sameComposer) {
+    composerEntryId = null;
+    const live = liveForm(name);
+    if (live) formBusy(live, false);
+    if (asTyped) {
+      // Emptied only if it still holds what was sent: anything typed while the
+      // hub was answering is the start of the next update.
+      if (live && live.elements.title.value === typed.title && live.elements.body.value === typed.body) live.reset();
+      error = "";
+    } else {
+      // The composer keeps what is in it, and its photos, since none of that
+      // was stored; the member is told which version was.
+      const held = new Set(parseIds(stored.file_ids));
+      pendingPhotos = [...sent.filter(p => !held.has(p.id)), ...pendingPhotos];
+      hubAlert("This update had already been posted", {
+        description: "An earlier try reached the hub, so it is posted as it was first sent. Edit it in the list to change it; what you typed since is still in the form.",
+      });
+    }
+  }
+  // Always redrawn: the entry may belong on the page now showing, and a
+  // composer that drew itself as posting has to be released.
+  render();
+}
+
+async function saveEntry(form) {
+  const id = form.dataset.entryId;
+  if (!entries.some(e => e.id === id) || !canManage()) return;
+  const draft = entryDraft({ title: form.title.value, body: form.body.value, audience: form.audience.value });
+  if (draft.error) { formFailed(form, draft.error); return; }
+  const patch = { ...draft.value, edited_at: nowIso() };
+  const name = form.dataset.draft;
+  formBusy(form, true);
+  try {
+    const { changed } = await db(
+      "UPDATE app_updates__entries SET title = ?, body = ?, audience = ?, edited_at = ? WHERE id = ?",
+      [patch.title, patch.body, patch.audience, patch.edited_at, id]);
+    if (changed === 0) throw new Error("unchanged");
+  } catch {
+    failForm(name, "Couldn’t save the update — try again.");
+    return;
+  }
+  // The row as it is now: a reload during the request replaces the objects.
+  const entry = entries.find(e => e.id === id);
+  if (!entry) return;
+  Object.assign(entry, patch);
+  // Closes this very editor only (redrawn or not): another entry's may have
+  // been opened meanwhile, or this one cancelled and opened again.
+  if (editingEntryId === id && liveForm(name)) { editingEntryId = null; formNonce += 1; }
+  if (openPageId === entry.page_id) { error = ""; render(); }
+}
+
+// Opening one entry's editor closes another's. If that one holds changes that
+// were not saved, the member is asked first.
+async function editEntry(id) {
+  const open = document.getElementById("entry-edit-form");
+  const current = open && entries.find(e => e.id === open.dataset.entryId);
+  const changed = current && (open.title.value !== current.title || open.body.value !== (current.body ?? "")
+    || open.audience.value !== (current.audience === "everyone" ? "everyone" : "family"));
+  if (changed && !await hubConfirm("Discard the changes to the update you were editing?", { confirmLabel: "Discard" })) return;
+  editingEntryId = id;
+  formNonce += 1;
+  error = "";
+  render();
+}
+
+async function deleteEntry(id) {
+  const entry = entries.find(e => e.id === id);
+  if (!entry || !canManage()) return;
+  if (!await hubConfirm("Delete this update?", {
+    description: parseIds(entry.file_ids).length
+      ? "Its photos are deleted with it, and it leaves the share page."
+      : "It leaves the share page too.",
+    confirmLabel: "Delete",
+  })) return;
+  try {
+    // Single-statement DELETE on purpose: delete_file_list_columns reclaims
+    // file_ids from this row.
+    const { changed } = await db("DELETE FROM app_updates__entries WHERE id = ?", [id]);
+    if (changed === 0) throw new Error("This update could not be deleted.");
+  } catch (e) {
+    if (openPageId === entry.page_id) { error = e.message; render(); }
+    return;
+  }
+  if (openPageId !== entry.page_id) return;
+  entries = entries.filter(e => e.id !== id);
+  const page = pageById(entry.page_id);
+  if (page) Object.assign(page, entryStatsAfter(page, entries, -1));
+  if (editingEntryId === id) editingEntryId = null;
+  error = "";
+  render();
+}
+
+// --- Messages ----------------------------------------------------------------
+
+async function deleteMessage(id) {
+  const message = messages.find(m => m.id === id);
+  if (!message || !canManage()) return;
+  if (!await hubConfirm("Delete this message?", {
+    description: "It is removed from the app and from the share page.",
+    confirmLabel: "Delete",
+  })) return;
+  try {
+    const { changed } = await db("DELETE FROM app_updates__messages WHERE id = ?", [id]);
+    if (changed === 0) throw new Error("This message could not be deleted.");
+  } catch (e) {
+    if (openPageId === message.page_id) { error = e.message; render(); }
+    return;
+  }
+  if (openPageId !== message.page_id) return;
+  messages = messages.filter(m => m.id !== id);
+  error = "";
+  render();
+}
+
+// --- Share links -------------------------------------------------------------
+
+function closeShareModal() {
+  shareModalEl?.remove();
+  shareModalEl = null;
+}
+
+function openShareBackdrop(html) {
+  closeShareModal();
+  shareModalEl = document.createElement("div");
+  shareModalEl.className = "modal-backdrop";
+  shareModalEl.innerHTML = `<div class="modal">${html}</div>`;
+  shareModalEl.addEventListener("click", (e) => { if (e.target === shareModalEl) closeShareModal(); });
+  document.body.appendChild(shareModalEl);
+}
+
+async function openShareModal(pageId) {
+  const page = pageById(pageId);
+  if (!page) return;
+  let status;
+  try { status = await share.listAll(); }
+  catch (err) { hubAlert("Couldn't load share links", { description: err.message }); return; }
+  // A refused read (sharing turned off, or limited to admins) comes back as an
+  // empty list. `limits` is on every real answer, so its absence is the tell —
+  // an empty list must not be shown as "no links".
+  if (status.limits === null) {
+    hubAlert("Couldn't load share links", {
+      description: "Sharing may be turned off here, or limited to admins. Check the sharing setting, then try again.",
+    });
+    return;
+  }
+  shareLinks = status.links;
+  shareEntitled = status.entitled;
+  const active = activeShareLinks(shareLinks, pageId);
+
+  const rows = active.map(l => {
+    const views = Number(l.viewCount) || 0;
+    const sent = Number(l.submissionCount) || 0;
+    return `
+    <div class="link-row">
+      <div style="flex:1;min-width:0">
+        <input readonly value="${esc(l.url)}" onclick="this.select()" class="tiny" />
+        <div class="tiny muted" style="margin-top:3px">
+          Expires ${esc(formatDay(l.expiresAt))} · ${views} view${views === 1 ? "" : "s"}${
+            l.writable ? ` · ${sent} message${sent === 1 ? "" : "s"} · ${glyph("pencil")} takes messages` : ""}${
+            l.hasPassword ? ` · ${glyph("lock")} password` : ""}
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" data-share-copy="${esc(l.id)}">Copy</button>
+      <button class="btn btn-ghost btn-sm" data-share-revoke="${esc(l.id)}" data-page-id="${esc(pageId)}">Revoke</button>
+    </div>`;
+  }).join("");
+
+  // `sharing` controls: visitor messages, password, 1-year expiry.
+  // Shown only to entitled households — no in-app upsell.
+  const sharingControls = shareEntitled ? `
+    <label class="check" style="margin-top:10px">
+      <input type="checkbox" id="share-writable" ${takesMessages(page) ? "" : "disabled"} /> Let visitors leave a message (up to ${MAX_MESSAGES_PER_LINK} through one link)
+    </label>
+    <input id="share-password" type="text" placeholder="Optional password (min 6 characters)"
+      autocomplete="off" class="tiny" style="margin-top:8px" />
+  ` : "";
+
+  // Only what is known: while the page's updates are not loaded, no count.
+  const summary = contents === "ready" && openPageId === pageId ? shareSummary(page, entries, entriesMore) : "";
+
+  openShareBackdrop(`
+    <h2>Share "${esc(page.title)}"</h2>
+    <p class="tiny muted" style="margin:6px 0 10px">
+      Anyone with the link reads the page, with no account. Each update shows the name of whoever posted it. ${esc(summary)}
+    </p>
+    ${rows || `<p class="tiny muted" style="padding:8px 0">No active links yet.</p>`}
+    ${status.truncated ? `<p class="tiny muted" style="padding:8px 0">Only the most recent links are listed.</p>` : ""}
+    ${sharingControls}
+    <div class="row" style="margin-top:14px">
+      <select id="share-expiry" class="tiny" style="width:auto">
+        ${SHARE_EXPIRY_CHOICES.map(({ hours, label }) =>
+              `<option value="${hours}"${hours === DEFAULT_SHARE_EXPIRY_HOURS ? " selected" : ""}>${label}</option>`).join("")}
+        ${shareEntitled ? `<option value="8760">1 year</option>` : ""}
+      </select>
+      <button class="btn" data-share-create="${esc(pageId)}">Create link</button>
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost" data-share-close>Close</button>
+    </div>
+  `);
+}
+
+async function createShare(pageId) {
+  const page = pageById(pageId);
+  const hours = Number(document.getElementById("share-expiry")?.value) || undefined;
+  const writable = !!document.getElementById("share-writable")?.checked;
+  const password = document.getElementById("share-password")?.value?.trim() || undefined;
+  const btn = shareModalEl?.querySelector("[data-share-create]");
+  if (btn) { btn.disabled = true; btn.textContent = "Creating…"; }
+  try {
+    const link = await share.create("page", pageId, { expiresInHours: hours, label: page?.title, writable, password });
+    try { await navigator.clipboard.writeText(link.url); } catch { /* the re-render shows the url to copy */ }
+    await openShareModal(pageId);
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.textContent = "Create link"; }
+    hubAlert("Couldn't create share link", { description: err.message });
+  }
+}
+
+async function copyShare(id) {
+  const link = shareLinks.find(l => l.id === id);
+  if (!link) return;
+  try { await navigator.clipboard.writeText(link.url); }
+  catch { hubAlert("Couldn't copy — select the link text and copy it manually."); }
+}
+
+async function revokeShare(id, pageId) {
+  if (!await hubConfirm("Revoke this share link?", {
+    description: "Anyone using it loses access immediately.",
+    confirmLabel: "Revoke",
+  })) return;
+  try { await share.revoke(id); await openShareModal(pageId); }
+  catch (err) { hubAlert("Couldn't revoke share link", { description: err.message }); }
+}
+
+// --- Rendering ---------------------------------------------------------------
+
+function renderPageCard(page) {
+  const count = Number(page.entry_count ?? 0);
+  return `
+    <article class="card card-link" role="button" tabindex="0" data-open-page="${esc(page.id)}" data-testid="page-card" data-page-id="${esc(page.id)}">
+      <div class="item-head">
+        <div>
+          <div class="item-title">${esc(page.title)}</div>
+          <div class="item-meta tiny">
+            ${count} update${count === 1 ? "" : "s"}${page.last_at ? ` · last posted ${esc(formatDay(page.last_at))}` : ""}
+          </div>
+        </div>
+        ${!isLive(page) ? `<span class="badge" data-testid="page-deleting">Not fully deleted</span>`
+          : page.status === "closed" ? `<span class="badge" data-testid="page-closed">Closed</span>` : ""}
+      </div>
+    </article>`;
+}
+
+// Owns the filtering and the empty states, so the keystroke handler can refresh
+// the list without repeating how it is derived.
+function renderPageCards() {
+  const shown = pageQ ? pages.filter(p => searchMatch(pageQ, searchableFields(p))) : pages;
+  if (shown.length) return shown.map(renderPageCard).join("");
+  if (pageQ) return `<div class="card empty">${chickadee("searching")}<p>No pages match "${esc(pageQ)}".</p></div>`;
+  if (loadFailed) return "";
+  return `<div class="card empty" data-testid="no-pages">${chickadee("nest")}<p>No pages yet.${canManage() ? " Start one for the news people keep asking about." : ""}</p></div>`;
+}
+
+function renderList() {
+  // The box stays while a query is set, even if the list has shrunk to one:
+  // a filter with no box to clear it would hide the page for good.
+  return `
+    ${pages.length > 1 || pageQ ? `<input id="page-search" class="search-input" type="search"
+      placeholder="Search pages…" aria-label="Search pages" value="${esc(pageQ)}" />` : ""}
+    <div id="page-list" class="stack">${renderPageCards()}</div>`;
+}
+
+function renderArchived() {
+  if (!canManage() || !archivedPages.length) return "";
+  return `
+    <details class="archived" data-testid="archived-pages">
+      <summary>Archived (${archivedPages.length})</summary>
+      <div class="stack">
+        ${archivedPages.map(page => `
+          <article class="card" data-testid="archived-page" data-page-id="${esc(page.id)}">
+            <div class="item-head">
+              <div class="item-title">${esc(page.title)}</div>
+              <div class="row">
+                <button class="btn btn-ghost btn-sm" data-restore-page="${esc(page.id)}" data-testid="archived-page-restore">Restore</button>
+                <button class="btn-quiet btn-quiet-danger" data-delete-page="${esc(page.id)}" data-testid="archived-page-delete">Delete</button>
+              </div>
+            </div>
+          </article>`).join("")}
+      </div>
+    </details>`;
+}
+
+// The tile draws a photo's small copy when `thumbs` (photo id -> small copy id)
+// has one; the link around it always opens the photo itself.
+function renderPhotoStrip(fileIds, { removable = false, thumbs = {} } = {}) {
+  if (!fileIds.length || !FILES_URL) return "";
+  return `<div class="thumbs">${fileIds.map(id => `
+    <div class="thumb-wrap">
+      <a href="${esc(files.url(id))}" target="_blank" rel="noreferrer">
+        <img class="thumb" src="${esc(files.url(tilePhotoId(id, thumbs)))}" alt="" loading="lazy" />
+      </a>
+      ${removable ? `<button class="thumb-drop" type="button" data-drop-photo="${esc(id)}" aria-label="Remove photo">×</button>` : ""}
+    </div>`).join("")}</div>`;
+}
+
+function audienceField(id, value) {
+  return `
+    <div class="field">
+      <label for="${id}">Who sees it</label>
+      <select id="${id}" name="audience" data-testid="field-${id}">
+        <option value="everyone" ${value === "everyone" ? "selected" : ""}>Everyone with the link, and the family</option>
+        <option value="family" ${value === "everyone" ? "" : "selected"}>Family only — never on the share page</option>
+      </select>
+    </div>`;
+}
+
+function renderEntryEditor(entry) {
+  return `
+    <form class="card form" id="entry-edit-form" data-testid="entry-edit-form" data-draft="edit:${esc(entry.id)}:${formNonce}" data-entry-id="${esc(entry.id)}">
+      <div class="field">
+        <label for="e-title">Title</label>
+        <input id="e-title" name="title" maxlength="${MAX_TITLE}" value="${esc(entry.title)}" data-autofocus required />
+      </div>
+      <div class="field">
+        <label for="e-body">Update</label>
+        <textarea id="e-body" name="body" maxlength="${MAX_BODY}">${esc(entry.body ?? "")}</textarea>
+      </div>
+      ${audienceField("e-audience", entry.audience)}
+      <div class="row">
+        <button class="btn" type="submit">Save</button>
+        <button class="btn btn-ghost" type="button" data-cancel-edit>Cancel</button>
+      </div>
+    </form>`;
+}
+
+function renderEntry(entry) {
+  if (entry.id === editingEntryId && canManage()) return renderEntryEditor(entry);
+  const photos = parseIds(entry.file_ids);
+  const shared = onSharePage(entry);
+  return `
+    <article class="card" data-testid="entry-card" data-entry-id="${esc(entry.id)}" data-entry-audience="${esc(entry.audience)}">
+      <div class="post-head">
+        <div>
+          <span class="entry-title">${esc(entry.title)}</span>
+          ${shared ? "" : `<span class="badge" style="margin-left:6px" data-testid="entry-family-only">${glyph("lock")} Family only</span>`}
+        </div>
+        <span class="tiny muted">${esc(formatWhen(entry.created_at))}</span>
+      </div>
+      <div class="item-meta tiny">${esc(entryAuthor(entry))}${entry.edited_at ? " · edited" : ""}</div>
+      ${entry.body ? `<div class="post-body">${esc(entry.body)}</div>` : ""}
+      ${renderPhotoStrip(photos, { thumbs: parseThumbs(entry.photo_thumbs) })}
+      ${canManage() ? `
+        <div class="row" style="margin-top:8px">
+          <button class="btn-quiet" data-edit-entry="${esc(entry.id)}" data-testid="entry-edit">Edit</button>
+          <button class="btn-quiet btn-quiet-danger" data-delete-entry="${esc(entry.id)}" data-testid="entry-delete">Delete</button>
+        </div>` : ""}
+    </article>`;
+}
+
+function olderButton(kind, label) {
+  return `<button class="btn btn-ghost btn-sm" type="button" data-older="${kind}" data-testid="older-${kind}" ${loadingOlder[kind] === openPageId ? "disabled" : ""}>${loadingOlder[kind] === openPageId ? "Loading…" : label}</button>`;
+}
+
+function renderEntryCards() {
+  // The entry being edited is always drawn: a search typed meanwhile must not
+  // make its open form vanish.
+  const shown = entryQ
+    ? entries.filter(e => e.id === editingEntryId || searchMatch(entryQ, entrySearchableFields(e, members)))
+    : entries;
+  const older = !entriesMore ? ""
+    : entries.length
+      ? `<p class="tiny muted" data-testid="entries-truncated">Showing the newest ${entries.length} updates${entryQ ? "; the search covers only these" : ""}. ${olderButton("entries", "Show older")}</p>`
+      : `<p class="tiny muted" data-testid="entries-truncated">${olderButton("entries", "Show older updates")}</p>`;
+  if (shown.length) return shown.map(renderEntry).join("") + older;
+  if (entryQ) return `<div class="card empty">No updates match "${esc(entryQ)}".</div>${older}`;
+  // Every loaded update was deleted, but older ones are still stored.
+  if (entriesMore) return older;
+  return `<div class="card empty" data-testid="no-entries">Nothing has been posted yet.</div>`;
+}
+
+function renderComposer(page) {
+  if (!canManage()) return "";
+  // Off while photos upload and while a post is in flight: the button so one
+  // update is not posted twice, the picker so nothing new is attached to an
+  // update that has already been sent.
+  const busy = uploadingCount > 0 || isPosting();
+  return `
+    <form class="card form" id="entry-form" data-testid="entry-form" data-draft="entry:${esc(page.id)}:${composerEpoch}">
+      <div class="field">
+        <label for="n-title">Title</label>
+        <input id="n-title" name="title" data-testid="field-entry-title" maxlength="${MAX_TITLE}" placeholder="Out of surgery" required />
+      </div>
+      <div class="field">
+        <label for="n-body">Update</label>
+        <textarea id="n-body" name="body" data-testid="field-entry-body" maxlength="${MAX_BODY}"
+          placeholder="What you would otherwise tell everyone, one call at a time."></textarea>
+      </div>
+      ${FILES_URL ? `
+        <div class="field">
+          <label for="photos">Photos</label>
+          <input id="photos" type="file" accept="${IMAGE_TYPES.join(",")}" multiple ${busy ? "disabled" : ""} />
+          ${renderPhotoStrip(pendingPhotos.map(p => p.id), { removable: true, thumbs: thumbsFor(pendingPhotos) })}
+        </div>` : ""}
+      ${audienceField("n-audience", "everyone")}
+      <button class="btn" type="submit" data-testid="post-entry" ${busy ? "disabled" : ""}>
+        ${isPosting() ? "Posting…" : busy ? "Uploading…" : "Post update"}
+      </button>
+    </form>`;
+}
+
+function renderMessage(message) {
+  return `
+    <article class="card" data-testid="message-card" data-message-id="${esc(message.id)}">
+      <div class="post-head">
+        <span class="item-title">${esc(message.guest_name || "A visitor")}</span>
+        <span class="tiny muted">${esc(formatWhen(message.created_at))}</span>
+      </div>
+      ${message.guest_message ? `<div class="post-body">${esc(message.guest_message)}</div>` : ""}
+      ${canManage() ? `
+        <div class="row" style="margin-top:8px">
+          <button class="btn-quiet btn-quiet-danger" data-delete-message="${esc(message.id)}" data-testid="message-delete">Delete</button>
+        </div>` : ""}
+    </article>`;
+}
+
+function renderMessages(page) {
+  const note = page.messages_visibility === "everyone"
+    ? "Visitors with the link read these too."
+    : "Only the family reads these.";
+  return `
+    <h2 class="section-title">Messages from visitors${messages.length ? ` (${messages.length}${messagesMore ? "+" : ""})` : ""}</h2>
+    <section class="stack" data-testid="message-list">
+      ${messages.length
+        ? `<p class="tiny muted" data-testid="messages-note">${note}</p>${messages.map(renderMessage).join("")}${
+            messagesMore ? `<p class="tiny muted">Showing the newest ${messages.length} messages. ${olderButton("messages", "Show older")}</p>` : ""}`
+        : messagesMore
+          ? `<p class="tiny muted">${olderButton("messages", "Show older messages")}</p>`
+          : `<div class="card empty">No messages yet. A link that takes messages lets visitors leave one.</div>`}
+    </section>`;
+}
+
+function renderPageContents(page) {
+  // Nothing that claims to know the page's contents is drawn until they are
+  // read: no empty state, no composer, no counts.
+  if (contents === "failed") {
+    return `<div class="load-error" data-testid="contents-error" role="alert"><span>Couldn’t load this page’s updates.</span> <button type="button" class="load-error-retry" data-testid="contents-retry">Try again</button></div>`;
+  }
+  if (contents !== "ready") return `<div class="card loading" data-testid="contents-loading">Loading…</div>`;
+  return `
+    ${isLive(page) ? renderComposer(page) : `
+      <div class="notice" data-testid="page-deleting-note">
+        Deleting this page was started and did not finish, so it takes no new updates.
+        ${canManage() ? `<button class="btn-quiet btn-quiet-danger" data-delete-page="${esc(page.id)}">Delete it again to finish</button>` : ""}
+      </div>`}
+    ${entries.length > 3 || entryQ ? `<input id="entry-search" class="search-input" type="search"
+      placeholder="Search updates…" aria-label="Search updates" value="${esc(entryQ)}" />` : ""}
+    <section id="entry-list" class="stack" data-testid="entry-list">${renderEntryCards()}</section>
+    ${renderMessages(page)}`;
+}
+
+function renderPage() {
+  const page = pageById(openPageId);
+  if (!page) return `<div class="card empty"><p>That page is gone.</p><button class="btn btn-ghost btn-sm" data-back>← All pages</button></div>`;
+  const cover = parseIds(page.cover_file_ids)[0];
+
+  return `
+    <div class="topbar">
+      <div>
+        <button class="btn-quiet" data-back>← All pages</button>
+        <h1>${esc(page.title)}</h1>
+        ${page.status === "closed" ? `<p class="muted tiny">Closed to new messages</p>` : ""}
+      </div>
+      <div class="row">
+        ${share.enabled && canManage() ? `<button class="btn btn-ghost btn-sm" data-share="${esc(page.id)}" data-testid="page-share">${glyph("link")} Share</button>` : ""}
+        ${canManage() ? `<button class="btn btn-ghost btn-sm" data-settings data-testid="page-settings">Settings</button>` : ""}
+      </div>
+    </div>
+    ${error ? `<div class="error">${esc(error)}</div>` : ""}
+    ${cover && FILES_URL ? `<img class="cover" src="${esc(files.url(cover))}" alt="" />` : ""}
+    ${page.about ? `<p class="muted" style="margin-bottom:12px;white-space:pre-wrap">${esc(page.about)}</p>` : ""}
+    ${renderPageContents(page)}`;
+}
+
+function renderSettings() {
+  const page = pageById(openPageId);
+  if (!page) return `<div class="card empty"><p>That page is gone.</p><button class="btn btn-ghost btn-sm" data-back>← All pages</button></div>`;
+  return `
+    <div class="topbar">
+      <div>
+        <button class="btn-quiet" data-back-to-page>← Back to the page</button>
+        <h1>Page settings</h1>
+      </div>
+    </div>
+    ${error ? `<div class="error">${esc(error)}</div>` : ""}
+    <form class="card form" id="settings-form" data-testid="settings-form" data-draft="settings:${esc(page.id)}">
+      <div class="field">
+        <label for="s-title">Title</label>
+        <input id="s-title" name="title" maxlength="${MAX_TITLE}" value="${esc(page.title)}" required />
+      </div>
+      <div class="field">
+        <label for="s-about">About</label>
+        <textarea id="s-about" name="about">${esc(page.about ?? "")}</textarea>
+      </div>
+      <div class="field">
+        <label for="s-status">Status</label>
+        <select id="s-status" name="status" data-testid="field-status">
+          <option value="open" ${page.status === "open" ? "selected" : ""}>Open — visitors can leave messages</option>
+          <option value="closed" ${page.status === "closed" ? "selected" : ""}>Closed — read only, links still work</option>
+          <option value="archived">Archived — hidden, share links stop opening</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="s-messages">Who reads visitors' messages</label>
+        <select id="s-messages" name="messages_visibility" data-testid="field-messages-visibility">
+          <option value="family" ${page.messages_visibility === "everyone" ? "" : "selected"}>
+            The family only — a visitor does not see other visitors' messages
+          </option>
+          <option value="everyone" ${page.messages_visibility === "everyone" ? "selected" : ""}>
+            Everyone with the link
+          </option>
+        </select>
+      </div>
+      <button class="btn" type="submit" data-testid="save-settings">Save</button>
+    </form>
+    ${FILES_URL ? `
+      <div class="card form">
+        <div class="field">
+          <label for="cover">Photo at the top of the page</label>
+          <input id="cover" type="file" accept="${IMAGE_TYPES.join(",")}" />
+        </div>
+        ${renderPhotoStrip(parseIds(page.cover_file_ids))}
+      </div>` : ""}
+    <div class="card">
+      <button class="btn-quiet btn-quiet-danger" data-delete-page="${esc(page.id)}" data-testid="delete-page">Delete this page</button>
+    </div>`;
+}
+
+function renderNewPage() {
+  return `
+    <div class="topbar">
+      <div>
+        <button class="btn-quiet" data-back>← All pages</button>
+        <h1>New page</h1>
+      </div>
+    </div>
+    ${error ? `<div class="error">${esc(error)}</div>` : ""}
+    <form class="card form" id="page-form" data-testid="page-form" data-draft="new-page:${formNonce}">
+      <div class="field">
+        <label for="p-title">What is the news about?</label>
+        <input id="p-title" name="title" maxlength="${MAX_TITLE}" data-autofocus placeholder="Dad's recovery" required />
+      </div>
+      <div class="field">
+        <label for="p-about">About</label>
+        <textarea id="p-about" name="about" placeholder="A line or two for people opening the link."></textarea>
+      </div>
+      <button class="btn" type="submit">Start the page</button>
+    </form>`;
+}
+
+// What is typed into a form lives only in the DOM, and a redraw rebuilds it —
+// on every photo added or removed, a message deleted, a search keystroke.
+// Every form names itself with data-draft; what was typed is carried across
+// to the form of the same name, and so is where the caret was.
+function captureDrafts() {
+  const drafts = {};
+  for (const form of document.querySelectorAll("form[data-draft]")) {
+    const values = {};
+    for (const el of form.elements) {
+      if (el.name && el.type !== "file") values[el.name] = el.value;
+    }
+    drafts[form.dataset.draft] = {
+      values,
+      // A save in flight, and a refusal already said: both belong to the form,
+      // not to the element a redraw is about to replace.
+      busy: form.dataset.busy === "1",
+      failure: form.querySelector("[data-form-error]")?.textContent ?? "",
+    };
+  }
+  const active = document.activeElement;
+  const focus = active?.id && active !== document.body
+    ? { id: active.id, start: active.selectionStart ?? null, end: active.selectionEnd ?? null }
+    : null;
+  // An opened <details> stays open: Restore and Delete live inside one.
+  const opened = [...document.querySelectorAll("details[data-testid][open]")].map(d => d.dataset.testid);
+  return { drafts, focus, opened };
+}
+
+function restoreDrafts({ drafts, focus, opened }) {
+  for (const id of opened) {
+    const details = document.querySelector(`details[data-testid="${CSS.escape(id)}"]`);
+    if (details) details.open = true;
+  }
+  for (const form of document.querySelectorAll("form[data-draft]")) {
+    const kept = drafts[form.dataset.draft];
+    if (!kept) continue;
+    for (const el of form.elements) {
+      if (el.name && el.type !== "file" && Object.hasOwn(kept.values, el.name)) el.value = kept.values[el.name];
+    }
+    if (kept.busy) formBusy(form, true);
+    if (kept.failure) formFailed(form, kept.failure);
+  }
+  const el = focus && document.getElementById(focus.id);
+  // Untouched when the paint left it focused (a search box whose list was
+  // redrawn): refocusing would scroll to it and break a half-composed character.
+  if (!el || el.disabled || document.activeElement === el) return;
+  el.focus({ preventScroll: true });
+  if (focus.start !== null && typeof el.setSelectionRange === "function") {
+    try { el.setSelectionRange(focus.start, focus.end); } catch { /* not a text control */ }
+  }
+}
+
+// Redraws part of the page with everything typed in it kept.
+function redraw(paint) {
+  const kept = captureDrafts();
+  paint();
+  restoreDrafts(kept);
+}
+
+function render() {
+  const root = document.getElementById("root");
+  // Drops the "loading" class; the wrapper around it is already the .app column.
+  root.className = "";
+  redraw(() => {
+    if (view === "page") root.innerHTML = renderPage();
+    else if (view === "settings") root.innerHTML = renderSettings();
+    else if (view === "new-page") root.innerHTML = renderNewPage();
+    else {
+      root.innerHTML = `
+        <div class="topbar">
+          <div>
+            <h1>Updates</h1>
+            <p class="muted tiny">Tell everyone the news once, on a page you share by link.</p>
+          </div>
+          <div class="row">
+            ${canManage() && !loadFailed ? `<button class="btn btn-sm" data-new-page data-testid="new-page">New page</button>` : ""}
+            <button class="btn btn-ghost btn-sm" type="button" data-refresh>Refresh</button>
+          </div>
+        </div>
+        ${loadFailed ? `<div class="load-error" data-testid="load-error" role="alert"><span>Couldn’t load the pages.</span> <button type="button" class="load-error-retry" data-testid="load-retry">Try again</button></div>` : ""}
+        ${error ? `<div class="error">${esc(error)}</div>` : ""}
+        ${notice ? `<div class="notice">${esc(notice)}</div>` : ""}
+        <section class="stack">${renderList()}</section>
+        ${renderArchived()}`;
+    }
+  });
+
+  // Programmatic focus, never the autofocus attribute — the app renders inside
+  // an iframe and the attribute would steal focus from the hub around it. And
+  // only when a form has just opened: a redraw behind someone typing must not
+  // pull the caret back to the first field.
+  const focusKey = `${view}|${openPageId ?? ""}|${editingEntryId ?? ""}`;
+  if (focusKey !== lastFocusKey) root.querySelector("[data-autofocus]")?.focus();
+  lastFocusKey = focusKey;
+}
+
+// --- Events ------------------------------------------------------------------
+
+// Re-render only the affected list on each keystroke so the search box keeps
+// focus and the caret does not jump to the end mid-word.
+document.addEventListener("input", (event) => {
+  if (event.target.id === "page-search") {
+    pageQ = event.target.value;
+    const el = document.getElementById("page-list");
+    if (el) el.innerHTML = renderPageCards();
+  } else if (event.target.id === "entry-search") {
+    entryQ = event.target.value;
+    const el = document.getElementById("entry-list");
+    // The list can hold an open entry editor; what is typed there is kept.
+    if (el) redraw(() => { el.innerHTML = renderEntryCards(); });
+  }
+});
+
+document.addEventListener("click", (event) => {
+  const target = event.target.closest("button, [data-open-page]");
+  if (!target) return;
+  // A notice is read once: it stays through redraws and goes with the next
+  // thing the member does.
+  notice = "";
+
+  const openId = target.getAttribute("data-open-page");
+  if (openId) { openPage(openId); return; }
+  if (target.matches('[data-refresh], [data-testid="load-retry"]')) { refresh(); return; }
+  if (target.matches('[data-testid="contents-retry"]')) {
+    const id = openPageId;
+    contents = "loading";
+    render();
+    loadPageContents(id).then(() => { if (openPageId === id) render(); });
+    return;
+  }
+  if (target.matches("[data-new-page]")) { leaveComposer(); view = "new-page"; render(); return; }
+
+  if (target.matches("[data-back]")) { leaveComposer(); openPageId = null; entryQ = ""; view = "list"; render(); return; }
+  if (target.matches("[data-back-to-page]")) { view = "page"; error = ""; render(); return; }
+  if (target.matches("[data-settings]")) { leaveComposer(); view = "settings"; render(); return; }
+  if (target.matches("[data-cancel-edit]")) { editingEntryId = null; formNonce += 1; render(); return; }
+  if (target.hasAttribute("data-older")) { target.disabled = true; loadOlder(target.getAttribute("data-older")); return; }
+  if (target.hasAttribute("data-delete-page")) { deletePage(target.getAttribute("data-delete-page")); return; }
+  if (target.hasAttribute("data-restore-page")) { restorePage(target.getAttribute("data-restore-page"), target); return; }
+  if (target.hasAttribute("data-drop-photo")) { dropPendingPhoto(target.getAttribute("data-drop-photo")); return; }
+  if (target.hasAttribute("data-edit-entry")) { editEntry(target.getAttribute("data-edit-entry")); return; }
+  if (target.hasAttribute("data-delete-entry")) { deleteEntry(target.getAttribute("data-delete-entry")); return; }
+  if (target.hasAttribute("data-delete-message")) { deleteMessage(target.getAttribute("data-delete-message")); return; }
+  if (target.hasAttribute("data-share")) { openShareModal(target.getAttribute("data-share")); return; }
+  if (target.hasAttribute("data-share-create")) { createShare(target.getAttribute("data-share-create")); return; }
+  if (target.hasAttribute("data-share-copy")) { copyShare(target.getAttribute("data-share-copy")); return; }
+  if (target.hasAttribute("data-share-revoke")) {
+    revokeShare(target.getAttribute("data-share-revoke"), target.getAttribute("data-page-id"));
+    return;
+  }
+  if (target.matches("[data-share-close]")) { closeShareModal(); return; }
+});
+
+// A page card is a button to a keyboard too.
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const card = event.target.closest?.("[data-open-page]");
+  if (!card || event.target !== card) return;
+  event.preventDefault();
+  openPage(card.getAttribute("data-open-page"));
+});
+
+document.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (event.target.id === "page-form") createPage(event.target);
+  else if (event.target.id === "settings-form") savePageSettings(event.target);
+  else if (event.target.id === "entry-form") createEntry(event.target);
+  else if (event.target.id === "entry-edit-form") saveEntry(event.target);
+});
+
+document.addEventListener("change", (event) => {
+  if (event.target.id === "photos") { addPendingPhotos(event.target); return; }
+  if (event.target.id === "cover") { setCoverPhoto(event.target); return; }
+});
+
+refresh();
+</script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+{
+  "id": "updates",
+  "contexts": ["household", "shared_space"],
+  "name": "Updates",
+  "version": "1.0.0",
+  "description": "Keep a wide circle informed from one page. Post news on a recovery, a new baby or a long stay away, share a single link, and friends and relatives read it and leave a message without an account.",
+  "entrypoint": "index.html",
+  "runtime": "static",
+  "category": "family",
+  "tags": ["updates", "journal", "caregiving", "recovery", "news", "sharing"],
+  "icon": "📬",
+  "nav": { "label": "Updates" },
+  "data_access": {
+    "reads": ["family.members"],
+    "writes": []
+  },
+  "permissions": {
+    "default_audience": "everyone",
+    "requires_approval": false
+  },
+  "storage": "db",
+  "preload": {
+    "pages": {"sql": "SELECT * FROM app_updates__pages WHERE status IN ('open', 'closed') ORDER BY created_at DESC"},
+    "entries": {"sql": "SELECT page_id, COUNT(*) AS entry_count, MAX(created_at) AS last_at FROM app_updates__entries GROUP BY page_id"}
+  },
+
+  "glance": {
+    "source": {
+      "kind": "sql",
+      "query": "SELECT e.title AS title FROM app_updates__entries e JOIN app_updates__pages p ON p.id = e.page_id WHERE e.audience = 'everyone' AND p.status IN ('open', 'closed') ORDER BY e.created_at DESC LIMIT 3"
+    },
+    "display": {
+      "template": "list",
+      "title": "title"
+    }
+  },
+
+  "db_plaintext_columns": [
+    "messages_visibility",
+    "live",
+    "page_live",
+    "audience",
+    "guest_name",
+    "guest_message",
+    "source"
+  ],
+
+  "row_policies": {
+    "pages": {
+      "kind": "adult_writable"
+    },
+    "entries": {
+      "kind": "adult_writable",
+      "audit_writes": true,
+      "column_write_acls": {
+        "member_id": { "writable_by": [], "actions": ["update"] },
+        "author_name": { "writable_by": [], "actions": ["update"] },
+        "page_id": { "writable_by": [], "actions": ["update"] },
+        "created_at": { "writable_by": [], "actions": ["update"] },
+        "page_live": { "writable_by": [] }
+      }
+    },
+    "messages": {
+      "kind": "adult_writable",
+      "audit_writes": true,
+      "max_rows": 5000,
+      "column_write_acls": {
+        "id": { "writable_by": [], "actions": ["update"] },
+        "page_id": { "writable_by": [] },
+        "guest_name": { "writable_by": [] },
+        "guest_message": { "writable_by": [] },
+        "source": { "writable_by": [] },
+        "created_at": { "writable_by": [] }
+      }
+    }
+  },
+
+  "member_references": {
+    "pages": { "column": "created_by", "on_removed": "keep" },
+    "entries": { "column": "member_id", "on_removed": "keep" }
+  },
+
+  "delete_file_list_columns": {
+    "pages": ["cover_file_ids"],
+    "entries": ["file_ids"]
+  },
+  "update_file_list_columns": {
+    "pages": ["cover_file_ids"],
+    "entries": ["file_ids"]
+  },
+  "delete_cascades": {
+    "pages": [
+      { "table": "entries", "foreign_key": "page_id" },
+      { "table": "messages", "foreign_key": "page_id" }
+    ]
+  },
+
+  "alert_on": ["updates.message_submitted"],
+  "shareable": {
+    "page": {
+      "table": "pages",
+      "title_column": "title",
+      "columns": [
+        { "column": "about", "label": "About", "format": "multiline" }
+      ],
+      "visible_where": { "column": "status", "values": ["open", "closed"] },
+      "files": { "ids_column": "cover_file_ids", "label": "Photo" },
+      "feeds": [
+        {
+          "label": "Updates",
+          "table": "entries",
+          "fk_column": "page_id",
+          "columns": [
+            { "column": "title", "label": "Update", "role": "heading" },
+            { "column": "created_at", "label": "Posted", "format": "datetime", "role": "timestamp" },
+            { "column": "body", "label": "Update", "format": "multiline", "role": "body" },
+            { "column": "author_name", "label": "Posted by", "role": "detail" }
+          ],
+          "files_column": "file_ids",
+          "where": [
+            { "column": "audience", "values": ["everyone"] }
+          ],
+          "order_column": "created_at",
+          "order": "newest",
+          "max_items": 100,
+          "empty_text": "Nothing has been posted yet."
+        },
+        {
+          "label": "Messages",
+          "table": "messages",
+          "fk_column": "page_id",
+          "columns": [
+            { "column": "guest_name", "label": "From", "role": "heading" },
+            { "column": "created_at", "label": "Sent", "format": "datetime", "role": "timestamp" },
+            { "column": "guest_message", "label": "Message", "format": "multiline", "role": "body" }
+          ],
+          "parent_where": { "column": "messages_visibility", "values": ["everyone"] },
+          "order_column": "created_at",
+          "order": "newest",
+          "max_items": 100
+        }
+      ],
+      "submit": {
+        "table": "messages",
+        "fk_column": "page_id",
+        "fields": [
+          { "column": "guest_name", "label": "Your name", "type": "text", "required": true, "max_length": 80 },
+          { "column": "guest_message", "label": "Your message", "type": "multiline", "required": true, "max_length": 1000 }
+        ],
+        "fixed_values": {
+          "source": "external"
+        },
+        "timestamp_columns": ["created_at"],
+        "max_submissions": 200,
+        "until_column": "closed_at",
+        "event": "updates.message_submitted"
+      }
+    }
+  },
+
+  "resource_limits": {
+    "max_db_bytes": 52428800,
+    "max_files_bytes": 1073741824
+  }
+}
