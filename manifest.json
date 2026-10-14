@@ -79,15 +79,11 @@
     "pages": { "column": "created_by", "on_removed": "keep" },
     "entries": { "column": "member_id", "on_removed": "keep" }
   },
+  "file_columns": {
+    "pages": { "list_columns": ["cover_file_ids"] },
+    "entries": { "list_columns": ["file_ids"] }
+  },
 
-  "delete_file_list_columns": {
-    "pages": ["cover_file_ids"],
-    "entries": ["file_ids"]
-  },
-  "update_file_list_columns": {
-    "pages": ["cover_file_ids"],
-    "entries": ["file_ids"]
-  },
   "delete_cascades": {
     "pages": [
       { "table": "entries", "foreign_key": "page_id" },
@@ -159,7 +155,6 @@
   },
 
   "resource_limits": {
-    "max_db_bytes": 52428800,
     "max_files_bytes": 1073741824
   }
 }
