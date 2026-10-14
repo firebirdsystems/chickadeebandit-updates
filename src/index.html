@@ -136,7 +136,7 @@ import {
   withEntryStats, entryStatsAfter, takePage, shareSummary,
   searchableFields, entrySearchableFields,
   MAX_TITLE, MAX_BODY, MAX_PHOTOS_PER_ENTRY, MAX_MESSAGES_PER_LINK, PAGE_SIZE, SAVE_PAGE_SQL, RESTORE_PAGE_SQL,
-  DELETE_PAGE_SQL, isLive, postRefusal,
+  DELETE_PAGE_SQL, isLive, postRefusal, failureLine, uploadFailureLine, shareFailureLine,
 } from "./logic.js";
 
 // --- Hub runtime globals (empty in demo mode) --------------------------------
@@ -230,8 +230,11 @@ async function db(sql, params = []) {
   });
   // A refusal is a non-2xx status with `{ error }`, and a proxy can answer with
   // a body that is not JSON at all: both throw, so callers' catch blocks run.
+  // The status and code choose the line shown (failureLine); the text never is.
   const json = await res.json().catch(() => null);
-  if (!res.ok || !json || typeof json !== "object" || json.error) throw new Error(json?.error || "Couldn’t reach the hub. Try again.");
+  if (!res.ok || !json || typeof json !== "object" || json.error) {
+    throw Object.assign(new Error(json?.error || "Couldn’t reach the hub. Try again."), { status: res.status, code: json?.code });
+  }
   return json;
 }
 
@@ -420,7 +423,7 @@ async function refresh() {
   } catch (e) {
     // The list shows the banner; an open page keeps its own message.
     loadFailed = true;
-    if (view !== "list") error = e.message;
+    if (view !== "list") error = failureLine(e, { action: "load this page", thing: "page" });
     render();
     return;
   }
@@ -495,8 +498,8 @@ async function createPage(form) {
       [page.id, page.title, page.about, page.cover_file_ids, page.status,
        page.messages_visibility, page.created_by, page.created_at],
     );
-  } catch {
-    failForm(name, "Couldn’t start the page — try again.");
+  } catch (e) {
+    failForm(name, failureLine(e, { action: "start the page", thing: "page" }));
     return;
   }
   pages = [{ ...page, entry_count: 0, last_at: null }, ...pages];
@@ -537,8 +540,8 @@ async function savePageSettings(form) {
     // The statement stamps closed_at from the hub's clock (logic.js).
     const { changed } = await db(SAVE_PAGE_SQL, patch.params);
     if (changed === 0) throw new Error("unchanged");
-  } catch {
-    failForm(name, "Couldn’t save the page — try again.");
+  } catch (e) {
+    failForm(name, failureLine(e, { action: "save the page", thing: "page" }));
     return;
   }
   const saved = liveForm(name);
@@ -574,7 +577,7 @@ async function setCoverPhoto(input) {
     // declared in update_file_list_columns.
     const { changed } = await db("UPDATE app_updates__pages SET cover_file_ids = ? WHERE id = ?",
       [JSON.stringify([uploaded.id]), page.id]);
-    if (changed === 0) throw new Error("This page could not be changed.");
+    if (changed === 0) throw Object.assign(new Error("This page could not be changed."), { forUser: true });
   } catch (e) {
     if (uploaded) {
       // An upload no row references is removed. But a failure can be a lost
@@ -592,8 +595,9 @@ async function setCoverPhoto(input) {
     }
     // Said on the settings screen it was asked from, or as a dialog if the
     // member has since moved on.
-    if (view === "settings" && openPageId === page.id) { error = e.message; render(); }
-    else hubAlert("Couldn't change the photo", { description: e.message });
+    const line = uploaded ? failureLine(e, { action: "change the photo", thing: "photo" }) : uploadFailureLine(e);
+    if (view === "settings" && openPageId === page.id) { error = line; render(); }
+    else hubAlert(line);
     return;
   }
   (pageById(page.id) ?? page).cover_file_ids = JSON.stringify([uploaded.id]);
@@ -627,7 +631,7 @@ async function deletePage(id) {
     // page takes no updates from here on, so deleting it again is all it needs.
     const msg = started
       ? "The page could not be fully deleted. It takes no new updates now; delete it again to finish."
-      : e.message;
+      : failureLine(e, { action: "delete the page", thing: "page" });
     if (started) await refresh();
     error = msg;
     render();
@@ -661,7 +665,7 @@ async function restorePage(id, button) {
     // changed because someone already restored it is not.
     if (changed === 0 && archivedPages.some(p => p.id === id)) error = "This page could not be restored.";
     else notice = `"${page.title}" is back, closed to new messages. Open it in its settings to take more.`;
-  } catch (e) { error = e.message; }
+  } catch (e) { error = failureLine(e, { action: "restore the page", thing: "page" }); }
   render();
 }
 
@@ -671,11 +675,11 @@ async function restorePage(id, button) {
 // entry's photos want one: the cover is drawn as a banner, from the photo.
 async function uploadImage(file, { thumbnail = false } = {}) {
   if (!IMAGE_TYPES.includes(file.type)) {
-    throw new Error(`${file.name} isn't an image the hub accepts (JPEG, PNG, WebP, GIF or HEIC).`);
+    throw Object.assign(new Error(`${file.name} isn't an image the hub accepts (JPEG, PNG, WebP, GIF or HEIC).`), { forUser: true });
   }
   const max = LIMITS.max_file_bytes ?? 10 * 1024 * 1024;
   if (file.size > max) {
-    throw new Error(`${file.name} is larger than the ${Math.round(max / (1024 * 1024))} MB limit.`);
+    throw Object.assign(new Error(`${file.name} is larger than the ${Math.round(max / (1024 * 1024))} MB limit.`), { forUser: true });
   }
   return files.upload(file, { thumbnail });
 }
@@ -708,7 +712,7 @@ async function addPendingPhotos(input) {
       pendingPhotos.push({ id, thumbnailId });
     }
   } catch (e) {
-    if (epoch === composerEpoch) error = e.message;
+    if (epoch === composerEpoch) error = uploadFailureLine(e);
   } finally {
     // Only this composer's page is redrawn; another view is not this one's.
     if (epoch === composerEpoch) {
@@ -830,7 +834,10 @@ async function createEntry(form) {
     if (sameComposer) {
       pendingPhotos = [...back, ...pendingPhotos];
       render();
-      failForm(name, "Couldn’t post the update — try again.");
+      // Known not stored: the refusal says why. Not known: worth another try.
+      failForm(name, stored === null
+        ? failureLine(insertError, { action: "post the update", thing: "update" })
+        : "Couldn’t post the update — try again.");
     } else {
       // The member has left this composer, and its text went with it.
       for (const photo of back) discardPhoto(photo);
@@ -890,8 +897,8 @@ async function saveEntry(form) {
       "UPDATE app_updates__entries SET title = ?, body = ?, audience = ?, edited_at = ? WHERE id = ?",
       [patch.title, patch.body, patch.audience, patch.edited_at, id]);
     if (changed === 0) throw new Error("unchanged");
-  } catch {
-    failForm(name, "Couldn’t save the update — try again.");
+  } catch (e) {
+    failForm(name, failureLine(e, { action: "save the update", thing: "update" }));
     return;
   }
   // The row as it is now: a reload during the request replaces the objects.
@@ -931,9 +938,9 @@ async function deleteEntry(id) {
     // Single-statement DELETE on purpose: delete_file_list_columns reclaims
     // file_ids from this row.
     const { changed } = await db("DELETE FROM app_updates__entries WHERE id = ?", [id]);
-    if (changed === 0) throw new Error("This update could not be deleted.");
+    if (changed === 0) throw Object.assign(new Error("This update could not be deleted."), { forUser: true });
   } catch (e) {
-    if (openPageId === entry.page_id) { error = e.message; render(); }
+    if (openPageId === entry.page_id) { error = failureLine(e, { action: "delete the update", thing: "update" }); render(); }
     return;
   }
   if (openPageId !== entry.page_id) return;
@@ -956,9 +963,9 @@ async function deleteMessage(id) {
   })) return;
   try {
     const { changed } = await db("DELETE FROM app_updates__messages WHERE id = ?", [id]);
-    if (changed === 0) throw new Error("This message could not be deleted.");
+    if (changed === 0) throw Object.assign(new Error("This message could not be deleted."), { forUser: true });
   } catch (e) {
-    if (openPageId === message.page_id) { error = e.message; render(); }
+    if (openPageId === message.page_id) { error = failureLine(e, { action: "delete the message", thing: "message" }); render(); }
     return;
   }
   if (openPageId !== message.page_id) return;
@@ -988,7 +995,7 @@ async function openShareModal(pageId) {
   if (!page) return;
   let status;
   try { status = await share.listAll(); }
-  catch (err) { hubAlert("Couldn't load share links", { description: err.message }); return; }
+  catch (err) { hubAlert(shareFailureLine(err, { action: "load the share links", thing: "page" })); return; }
   // A refused read (sharing turned off, or limited to admins) comes back as an
   // empty list. `limits` is on every real answer, so its absence is the tell —
   // an empty list must not be shown as "no links".
@@ -1068,7 +1075,7 @@ async function createShare(pageId) {
     await openShareModal(pageId);
   } catch (err) {
     if (btn) { btn.disabled = false; btn.textContent = "Create link"; }
-    hubAlert("Couldn't create share link", { description: err.message });
+    hubAlert(shareFailureLine(err, { action: "create the share link", thing: "page" }));
   }
 }
 
@@ -1085,7 +1092,7 @@ async function revokeShare(id, pageId) {
     confirmLabel: "Revoke",
   })) return;
   try { await share.revoke(id); await openShareModal(pageId); }
-  catch (err) { hubAlert("Couldn't revoke share link", { description: err.message }); }
+  catch (err) { hubAlert(shareFailureLine(err, { action: "revoke the link", thing: "link" })); }
 }
 
 // --- Rendering ---------------------------------------------------------------

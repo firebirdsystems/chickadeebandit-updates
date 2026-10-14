@@ -290,3 +290,35 @@ export function searchableFields(page) {
 export function entrySearchableFields(entry, members) {
   return [entry.title, entry.body, entryAuthor(entry, members)];
 }
+
+/**
+ * The line a failed write shows ("Refused, gone, or failed: which line"), from
+ * the error's `status` / `code` — never the hub's text. `forUser` marks a
+ * message this app worded itself (a photo it would not send, say).
+ */
+export function failureLine(e, { action, thing } = {}) {
+  if (e?.forUser) return e.message;
+  if (e?.code === "UNIQUE_CONSTRAINT" || /UNIQUE constraint failed/i.test(String(e?.message ?? ""))) return `That ${thing} already exists.`;
+  if (e?.status === 403) return `You don’t have permission to ${action}.`;
+  if (e?.status === 507) return "The household’s storage is full — free up space first.";
+  if (e?.status === 429) return "Too many tries — wait a minute and try again.";
+  return `Couldn’t ${action} — try again.`;
+}
+
+/** The line a failed photo upload shows: the upload's own refusals first. */
+export function uploadFailureLine(e) {
+  if (e?.status === 413) return "That photo is too large.";
+  if (e?.status === 415) return "That kind of file can’t be uploaded.";
+  return failureLine(e, { action: "add that photo", thing: "photo" });
+}
+
+/** The line a failed share-link create, revoke or list shows. */
+export function shareFailureLine(e, { action, thing } = {}) {
+  if (e?.status === 402) return "Too many share links are active — revoke one first.";
+  if (e?.status === 409 && e?.code === "share_link_limit") return "Too many share links are active — revoke one first.";
+  if (e?.status === 400 && e?.code === "password_too_short") return "The password needs at least 6 characters.";
+  if (e?.status === 403) return `You don’t have permission to ${action}.`;
+  if (e?.status === 404) return `This ${thing} has been removed.`;
+  if (e?.status === 429) return "Too many tries — wait a minute and try again.";
+  return `Couldn’t ${action} — try again.`;
+}
