@@ -176,12 +176,15 @@ describe("what a visitor writes", () => {
 
 describe("files", () => {
   it("declares every file column for reclaim", () => {
-    expect(manifest.delete_file_list_columns).toEqual({ pages: ["cover_file_ids"], entries: ["file_ids"] });
-    expect(manifest.update_file_list_columns).toEqual({ pages: ["cover_file_ids"], entries: ["file_ids"] });
+    // One `file_columns` entry covers both the DELETE and the UPDATE lane.
+    expect(manifest.file_columns).toEqual({
+      pages: { list_columns: ["cover_file_ids"] },
+      entries: { list_columns: ["file_ids"] },
+    });
     // photo_thumbs holds small copies' ids as a JSON OBJECT. A small copy is
     // deleted with its photo, and declaring an object column as a file list
     // would break every reclaim, so it must stay undeclared.
-    expect(JSON.stringify([manifest.delete_file_list_columns, manifest.update_file_list_columns])).not.toContain("photo_thumbs");
+    expect(JSON.stringify(manifest.file_columns)).not.toContain("photo_thumbs");
   });
 
   it("publishes exactly the declared file columns", () => {
