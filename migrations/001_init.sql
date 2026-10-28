@@ -7,7 +7,7 @@
 -- A page is the shareable item. `adult_writable`: adults open and manage
 -- pages, everyone in the household reads them.
 CREATE TABLE IF NOT EXISTS app_updates__pages (
-  id              TEXT PRIMARY KEY,
+  id              TEXT NOT NULL PRIMARY KEY,
   title           TEXT NOT NULL,
   about           TEXT NOT NULL DEFAULT '',
   cover_file_ids  TEXT NOT NULL DEFAULT '[]', -- JSON array of hub file ids (one photo today)
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS app_updates__pages (
 -- One update on a page, written by an adult member. Title, body, author name
 -- and photos are encrypted at rest; the share page decrypts what it projects.
 CREATE TABLE IF NOT EXISTS app_updates__entries (
-  id           TEXT PRIMARY KEY,
+  id           TEXT NOT NULL PRIMARY KEY,
   page_id      TEXT NOT NULL,
   member_id    TEXT NOT NULL,
   -- Denormalized: the share page projects columns from this row and cannot
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS app_updates__entries (
 -- listing these columns as plaintext (the hub writes a visitor's text in the
 -- clear) does not also unencrypt an entry's body.
 CREATE TABLE IF NOT EXISTS app_updates__messages (
-  id            TEXT PRIMARY KEY,
+  id            TEXT NOT NULL PRIMARY KEY,
   page_id       TEXT NOT NULL,
   guest_name    TEXT NOT NULL DEFAULT '',
   guest_message TEXT NOT NULL DEFAULT '',
